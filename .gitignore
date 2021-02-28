@@ -111,3 +111,9 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+# used for test classes generating files
+/plugins/
+
+# plugin-generated files
+/gen/

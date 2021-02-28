@@ -1,0 +1,15 @@
+canPlaceSnowOn:
+  - snow_block
+  - quartz
+
+itemsAbleToBreakSnow:
+  - wooden_shovel
+  - iron_shovel
+  - gold_shovel
+  - diamond_shovel
+  - netherite_shovel
+
+lives: 5
+
+messages:
+  playerDeath: '§c§l{player}§c est mort ! §4§l{remaining}§c joueurs restant !'
