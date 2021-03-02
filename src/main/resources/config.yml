@@ -10,6 +10,9 @@ itemsAbleToBreakSnow:
   - netherite_shovel
 
 lives: 5
+world: world
+location: 0 64 0
+spawn-locations: []
 
 messages:
   playerDeath: '§c§l{player}§c est mort ! §4§l{remaining}§c joueurs restant !'

@@ -1,6 +1,7 @@
 package fr.bananasmoothii.snowwars;
 
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
@@ -11,7 +12,7 @@ public class SnowWarsGame {
     public static final ArrayList<SnowWarsGame> instances = new ArrayList<>();
 
     private final List<Player> players = new ArrayList<>();
-    private Map<Player, Integer> playerLives = new HashMap<>();
+    private final Map<Player, Integer> playerLives = new HashMap<>();
     private boolean started = false;
     private int startLives = Config.lives;
 
@@ -33,6 +34,7 @@ public class SnowWarsGame {
 
     public void addPlayer(Player player) {
         players.add(player);
+        player.teleport(Config.location);
     }
 
     public void removePlayer(Player player) {
@@ -47,10 +49,10 @@ public class SnowWarsGame {
         return started;
     }
 
-
     public void start() {
         for (Player player: players) {
             playerLives.put(player, startLives);
+            player.teleport(nextSpawnLocation());
         }
         started = true;
     }
@@ -72,5 +74,13 @@ public class SnowWarsGame {
             }
         }
 
+    }
+
+    private int i = 0;
+    private Location nextSpawnLocation() {
+        Location location = Config.spawnLocations.get(i);
+        if (i == Config.spawnLocations.size() - 1) i = 0;
+        else i++;
+        return location;
     }
 }
