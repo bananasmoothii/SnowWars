@@ -1,9 +1,13 @@
 package fr.bananasmoothii.snowwars;
 
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +26,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
         //noinspection ConstantConditions
         getCommand("snowwars").setExecutor(this);
+        Config.load(this::saveDefaultConfig);
     }
 
     @Override
@@ -33,7 +38,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
         return plugin;
     }
 
-    private SnowWarsGame mainSnowWarsGame = null;
+    public static SnowWarsGame mainSnowWarsGame = null;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -45,31 +50,88 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (mainSnowWarsGame == null) {
                     mainSnowWarsGame = new SnowWarsGame();
                 }
-                if (sender instanceof Player) {
-                    mainSnowWarsGame.addPlayer((Player) sender);
-                    return true;
+                if (args.length >= 2 && ! args[1].isEmpty()) {
+                    if (hasNoPerm(sender, "snowwars.join.others")) return true;
+                    if (args[1].equals("*")) {
+                        World world = sender instanceof Entity ? ((Entity) sender).getWorld() : Bukkit.getServer().getWorlds().get(0);
+                        mainSnowWarsGame.addPlayer(world.getPlayers());
+                    } else {
+                        Player player = Bukkit.getServer().getPlayer(args[1]);
+                        if (player == null) {
+                            sender.sendMessage("§cThat player doesn't exist");
+                            return true;
+                        }
+                        mainSnowWarsGame.addPlayer(player);
+                    }
+                } else {
+                    if (sender instanceof Player) {
+                        mainSnowWarsGame.addPlayer((Player) sender);
+                    }
+                    else
+                        sender.sendMessage("You can't do that");
                 }
-                break;
+                return true;
             case "start":
+                if (hasNoPerm(sender, "snowwars.start")) return true;
                 if (mainSnowWarsGame == null) {
-                    sender.sendMessage("No game to start");
+                    sender.sendMessage("§cNo game to start");
                     return false;
                 }
-                mainSnowWarsGame.start();
+                if (Config.spawnLocations.isEmpty()) {
+                    sender.sendMessage("§cYou need to add spawn locations first via §o/snowwars addspawn");
+                } else {
+                    mainSnowWarsGame.start();
+                    sender.sendMessage("§aGame started.");
+                }
+                return true;
             case "stop":
+                if (hasNoPerm(sender, "snowwars.stop")) return true;
                 if (mainSnowWarsGame == null) {
-                    sender.sendMessage("No game to stop");
+                    sender.sendMessage("§cNo game to stop");
                     return false;
                 }
                 mainSnowWarsGame.stop();
                 mainSnowWarsGame = null;
-            case "addspawn":
+                sender.sendMessage("§aGame stopped.");
+                return true;
+            case "setmainspawn":
+                if (hasNoPerm(sender, "snowwars.setmainspawn")) return true;
                 if (sender instanceof Entity) {
-                    Config.addSpawnLocation(((Entity) sender).getLocation());
+                    Location location = ((Entity) sender).getLocation();
+                    Config.location = location;
+                    Config.raw.put("location", Config.getStringLocation(location));
+                    Config.refreshConfig();
+                    sender.sendMessage("§aSet the main spawn and refreshed the config.");
                     return true;
                 }
-                sender.sendMessage("You are not an entity with position");
+                sender.sendMessage("§cYou are not an entity with position");
+                return false;
+            case "addspawn":
+                if (hasNoPerm(sender, "snowwars.addspawn")) return true;
+                if (sender instanceof Entity) {
+                    Config.addSpawnLocation(((Entity) sender).getLocation());
+                    sender.sendMessage("§aAdded spawn location and refreshed the config.");
+                    return true;
+                }
+                sender.sendMessage("§cYou are not an entity with position");
+                return false;
+            case "reload":
+                if (hasNoPerm(sender, "snowwars.reload")) return true;
+                if (mainSnowWarsGame != null) {
+                    mainSnowWarsGame.stop();
+                    mainSnowWarsGame = null;
+                }
+                Config.load(this::saveDefaultConfig);
+                sender.sendMessage("§aConfig reloaded.");
+                return true;
+            default:
+                return false;
         }
-        return false;
+    }
+
+    public static boolean hasNoPerm(CommandSender sender, String permission) {
+        if (sender.hasPermission(permission) || sender.isOp()) return false;
+        sender.sendMessage(Config.Messages.getNoPerm(permission));
+        return true;
     }
 }

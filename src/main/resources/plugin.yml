@@ -8,4 +8,4 @@ description: This plugin is a minigame plugin for running a snow wars
 commands:
   snowwars:
     description: Main SnowWars command
-    usage: /snowwars join|start|stop
+    usage: /snowwars join|start|stop|addspawn|setmainspawn|reload
