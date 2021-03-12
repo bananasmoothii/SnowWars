@@ -251,6 +251,7 @@ public class SnowWarsGame {
             compound.set("CanPlaceOn", tagList);
         } else {
             tagList.add(NBTTagString.a("snow_block"));
+            tagList.add(NBTTagString.a("snow"));
             //noinspection ConstantConditions
             compound.set("CanDestroy", tagList);
         }

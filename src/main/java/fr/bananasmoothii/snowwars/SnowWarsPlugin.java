@@ -63,7 +63,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                         mainSnowWarsGame.addPlayer(player);
                     }
                 } else {
-                    if (sender instanceof Player) {
+                    if (sender instanceof Player && ! mainSnowWarsGame.getPlayers().contains(sender)) {
                         mainSnowWarsGame.addPlayer((Player) sender);
                     }
                     else
@@ -97,8 +97,11 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (hasNoPerm(sender, "snowwars.setmainspawn")) return true;
                 if (sender instanceof Entity) {
                     Location location = ((Entity) sender).getLocation();
+                    World world = ((Entity) sender).getWorld();
                     Config.location = location;
+                    Config.world = world;
                     Config.raw.put("location", Config.getStringLocation(location));
+                    Config.raw.put("world", world.getName());
                     Config.refreshConfig();
                     sender.sendMessage("§aSet the main spawn and refreshed the config.");
                     return true;
