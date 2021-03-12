@@ -30,7 +30,8 @@ public abstract class Config {
 
     public static class Messages {
         public static Map<String, String> raw;
-        public static String playerDiedBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle, noPerm, join, alreadyJoined, youResuscitated;
+        public static String playerDiedBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
+                noPerm, join, alreadyJoined, youResuscitated, playerWon;
 
         public static String getPlayerDiedBroadcast(String player, String remaining) {
             return playerDiedBroadcast.replace("{player}", player).replace("{remaining}", remaining);
@@ -46,6 +47,10 @@ public abstract class Config {
 
         public static String getNoPerm(String perm) {
             return noPerm.replace("{perm}", perm);
+        }
+
+        public static String getPlayerWon(String player) {
+            return playerWon.replace("{player}", player);
         }
     }
 

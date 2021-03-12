@@ -26,4 +26,5 @@ messages:
   join: '§aTu as rejoint le jeu de §lSnow Wars§a !'
   alreadyJoined: '§eTu avais déjà rejoint, mais je te retéléporte ici si tu veux.'
   youResuscitated: '§2Tu a été ressuscité !'
+  playerWon: '§b§l§n{player}§b a gagné !'
 

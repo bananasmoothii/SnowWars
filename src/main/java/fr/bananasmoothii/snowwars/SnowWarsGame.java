@@ -12,7 +12,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.security.Key;
 import java.util.*;
 
 public class SnowWarsGame {
@@ -90,32 +89,56 @@ public class SnowWarsGame {
     }
 
     public void playerDied(PlayerDeathEvent playerDeathEvent) {
-        final Player player = playerDeathEvent.getEntity();
-        if (playerLives.containsKey(player)) {
-            int lives = playerLives.get(player) - 1;
-            int remainingPLayers = lives == 0 ? players.size() - 1 : players.size();
+        final Player deadPlayer = playerDeathEvent.getEntity();
+        if (playerLives.containsKey(deadPlayer)) {
+            int lives = playerLives.get(deadPlayer) - 1;
+            int remainingPLayers = lives == 0 ? playerLives.size() - 1 : playerLives.size();
 
-            player.spigot().respawn();
-            player.setGameMode(GameMode.SPECTATOR);
+            deadPlayer.spigot().respawn();
+            deadPlayer.setGameMode(GameMode.SPECTATOR);
 
             for (Player playingPlayer: players) {
-                playingPlayer.sendMessage(Messages.getPlayerDiedBroadcast(player.getDisplayName(), String.valueOf(remainingPLayers)));
+                playingPlayer.sendMessage(Messages.getPlayerDiedBroadcast(deadPlayer.getDisplayName(), String.valueOf(remainingPLayers)));
             }
 
             if (lives == 0) {
-                players.remove(player);
-                player.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
+                playerLives.remove(deadPlayer);
+                deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
                         Messages.playerDiedForeverSubtitle,
                         1, 6, 2);
             } else {
-                player.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
+                deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
                         Messages.getPlayerDiedSubtitle(String.valueOf(lives)),
                         1, 4, 2);
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                    player.teleport(spawnLocations.get(player));
-                    player.setGameMode(GameMode.ADVENTURE);
-                    player.sendMessage(Messages.youResuscitated);
+                    deadPlayer.teleport(spawnLocations.get(deadPlayer));
+                    deadPlayer.setGameMode(GameMode.ADVENTURE);
+                    deadPlayer.sendMessage(Messages.youResuscitated);
                 }, Config.respawnDelay * 20L);
+            }
+
+            if (playerLives.size() <= 1) {
+                stop();
+                for (Player player: players) {
+                    player.sendTitle(Messages.getPlayerWon(player.getDisplayName()), null, 1, 6, 2);
+                    player.setGameMode(GameMode.ADVENTURE);
+                    player.setAllowFlight(true);
+                }
+                Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> {
+                    for (int i = 0; i < 40; i++) {
+                        Location loc = deadPlayer.getLocation();
+                        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                                "/summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
+                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException ignore) {}
+                    }
+                    for (Player player: players) {
+                        player.teleport(Config.location);
+                        player.setAllowFlight(false);
+                    }
+                });
             }
         }
 
