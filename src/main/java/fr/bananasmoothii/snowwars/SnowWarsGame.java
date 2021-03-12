@@ -2,13 +2,15 @@ package fr.bananasmoothii.snowwars;
 
 import fr.bananasmoothii.snowwars.Config.Messages;
 
+import net.minecraft.server.v1_16_R3.NBTTagCompound;
+import net.minecraft.server.v1_16_R3.NBTTagList;
+import net.minecraft.server.v1_16_R3.NBTTagString;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.security.Key;
 import java.util.*;
@@ -73,13 +75,14 @@ public class SnowWarsGame {
             player.teleport(loc);
             spawnLocations.put(player, loc);
             player.setGameMode(GameMode.ADVENTURE);
+            asyncFilterInventory(player.getInventory());
         }
         started = true;
     }
 
     public void stop() {
-        started = false;
         setOldRecipes();
+        started = false;
     }
 
     public List<Player> getPlayers() {
@@ -141,14 +144,31 @@ public class SnowWarsGame {
         newRecipes = new ArrayList<>(Config.itemsAbleToBreakSnow.size() + 1);
         for (Recipe recipe: oldRecipes) {
             Recipe newRecipe;
-            ItemStack result = PluginListener.filterItemStack(recipe.getResult());
+            ItemStack result = filterItemStack(recipe.getResult());
             if (result.getType() == Material.SNOW_BLOCK)
                 result.setAmount(Config.craftedSnowAmount);
 
             if (recipe instanceof ShapelessRecipe) {
-                newRecipe = new ShapelessRecipe(((Keyed) recipe).getKey(), result);
+                newRecipe = new ShapelessRecipe(key(((Keyed) recipe).getKey().getKey()), result);
+                ShapelessRecipe copy = (ShapelessRecipe) newRecipe;
+                ShapelessRecipe oldCopy = (ShapelessRecipe) recipe;
+                for (ItemStack oldItemStack : oldCopy.getIngredientList()) {
+                    copy.addIngredient(1, oldItemStack.getType());
+                }
+                copy.setGroup(oldCopy.getGroup());
             } else if (recipe instanceof ShapedRecipe) {
-                newRecipe = new ShapedRecipe(((Keyed) recipe).getKey(), result);
+                newRecipe = new ShapedRecipe(key(((Keyed) recipe).getKey().getKey()), result);
+                ShapedRecipe copy = (ShapedRecipe) newRecipe;
+                ShapedRecipe oldCopy = (ShapedRecipe) recipe;
+                copy.shape(oldCopy.getShape());
+                for (Map.Entry<Character, ItemStack> entry: oldCopy.getIngredientMap().entrySet()) {
+                    if (entry.getValue() != null)
+                        copy.setIngredient(entry.getKey(), entry.getValue().getType());
+                }
+                copy.setGroup(oldCopy.getGroup());
+            } else if (recipe instanceof SmithingRecipe) {
+                newRecipe = new SmithingRecipe(key(((Keyed) recipe).getKey().getKey()), result,
+                        ((SmithingRecipe) recipe).getBase(), ((SmithingRecipe) recipe).getAddition());
             } else continue;
 
             newRecipes.add(newRecipe);
@@ -173,5 +193,44 @@ public class SnowWarsGame {
         for (Recipe recipe: oldRecipes) {
             server.addRecipe(recipe);
         }
+    }
+
+    private static NamespacedKey key(String name) {
+        return new NamespacedKey(SnowWarsPlugin.inst(), name);
+    }
+
+
+
+    public static void asyncFilterInventory(Inventory inventory) {
+        Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> filterInventory(inventory));
+    }
+
+    public static void filterInventory(Inventory inventory) {
+        for (ItemStack itemStack: inventory.getContents()) {
+            if (itemStack != null) {
+                inventory.setItem(inventory.first(itemStack.getType()), filterItemStack(itemStack));
+            }
+        }
+    }
+
+    public static ItemStack filterItemStack(@NotNull ItemStack itemStack) {
+        if (itemStack.getType() != Material.SNOW_BLOCK && ! Config.itemsAbleToBreakSnow.contains(itemStack.getType()))
+            return itemStack;
+        net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        NBTTagCompound compound = nmsItemStack.hasTag() ? nmsItemStack.getTag() : new NBTTagCompound();
+        NBTTagList tagList = new NBTTagList();
+        if (itemStack.getType() == Material.SNOW_BLOCK) {
+            for (String material : Config.canPlaceSnowOnStrings) {
+                tagList.add(NBTTagString.a(material));
+            }
+            //noinspection ConstantConditions
+            compound.set("CanPlaceOn", tagList);
+        } else {
+            tagList.add(NBTTagString.a("snow_block"));
+            //noinspection ConstantConditions
+            compound.set("CanDestroy", tagList);
+        }
+        nmsItemStack.setTag(compound);
+        return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 }
