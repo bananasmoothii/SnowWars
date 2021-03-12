@@ -124,6 +124,7 @@ public abstract class Config {
 
             probableCause = "crafted-snow-amount";
             craftedSnowAmount = (int) raw.get("crafted-snow-amount");
+            PluginListener.snowBlockBreakMaxDrops = (int) Math.ceil(4.0 / craftedSnowAmount);
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");

@@ -81,6 +81,27 @@ public class SnowWarsGame {
 
     public void stop() {
         setOldRecipes();
+        for (Player player: players) {
+            player.sendTitle(Messages.getPlayerWon(player.getDisplayName()), null, 1, 6, 2);
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setAllowFlight(true);
+        }
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            Player winner = playerLives.keySet().iterator().next();
+            for (int i = 0; i < 40; i++) {
+                Location loc = winner.getLocation();
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                        "minecraft:summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
+                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignore) {}
+            }
+            for (Player player: players) {
+                player.teleport(Config.location);
+                player.setAllowFlight(false);
+            }
+        });
         started = false;
     }
 
@@ -94,8 +115,8 @@ public class SnowWarsGame {
             int lives = playerLives.get(deadPlayer) - 1;
             int remainingPLayers = lives == 0 ? playerLives.size() - 1 : playerLives.size();
 
-            deadPlayer.spigot().respawn();
             deadPlayer.setGameMode(GameMode.SPECTATOR);
+            deadPlayer.spigot().respawn();
 
             for (Player playingPlayer: players) {
                 playingPlayer.sendMessage(Messages.getPlayerDiedBroadcast(deadPlayer.getDisplayName(), String.valueOf(remainingPLayers)));
@@ -116,31 +137,9 @@ public class SnowWarsGame {
                     deadPlayer.sendMessage(Messages.youResuscitated);
                 }, Config.respawnDelay * 20L);
             }
-
-            if (playerLives.size() <= 1) {
-                stop();
-                for (Player player: players) {
-                    player.sendTitle(Messages.getPlayerWon(player.getDisplayName()), null, 1, 6, 2);
-                    player.setGameMode(GameMode.ADVENTURE);
-                    player.setAllowFlight(true);
-                }
-                Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> {
-                    for (int i = 0; i < 40; i++) {
-                        Location loc = deadPlayer.getLocation();
-                        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
-                                "/summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
-                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ignore) {}
-                    }
-                    for (Player player: players) {
-                        player.teleport(Config.location);
-                        player.setAllowFlight(false);
-                    }
-                });
-            }
         }
+
+        if (playerLives.size() <= 1) stop();
 
     }
 
@@ -229,9 +228,11 @@ public class SnowWarsGame {
     }
 
     public static void filterInventory(Inventory inventory) {
+        int i = 0;
         for (ItemStack itemStack: inventory.getContents()) {
             if (itemStack != null) {
-                inventory.setItem(inventory.first(itemStack.getType()), filterItemStack(itemStack));
+                inventory.setItem(i, filterItemStack(itemStack));
+                i++;
             }
         }
     }
