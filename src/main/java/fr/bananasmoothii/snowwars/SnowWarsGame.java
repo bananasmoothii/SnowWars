@@ -1,7 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
 import fr.bananasmoothii.snowwars.Config.Messages;
-
 import net.minecraft.server.v1_16_R3.NBTTagCompound;
 import net.minecraft.server.v1_16_R3.NBTTagList;
 import net.minecraft.server.v1_16_R3.NBTTagString;
@@ -18,11 +17,48 @@ public class SnowWarsGame {
 
     public static final ArrayList<SnowWarsGame> instances = new ArrayList<>();
 
-    private final List<Player> players = new ArrayList<>();
-    private final Map<Player, Integer> playerLives = new HashMap<>();
+    private final Map<Player, PlayerData> players = new HashMap<>();
     private boolean started = false;
     private int startLives = Config.lives;
-    private HashMap<Player, Location> spawnLocations = new HashMap<>();
+
+    public static class PlayerData {
+        private int lives;
+        private Location spawnLocation;
+        private boolean isGhost = false;
+
+        public PlayerData(int startLives, Location spawnLocation) {
+            this.lives = startLives;
+            this.spawnLocation = spawnLocation;
+        }
+
+        public PlayerData(int startLives) {
+            this.lives = startLives;
+        }
+
+        public int getLives() {
+            return lives;
+        }
+
+        public void setLives(int lives) {
+            this.lives = lives;
+        }
+
+        public Location getSpawnLocation() {
+            return spawnLocation;
+        }
+
+        public void setSpawnLocation(Location spawnLocation) {
+            this.spawnLocation = spawnLocation;
+        }
+
+        public boolean isGhost() {
+            return isGhost;
+        }
+
+        public boolean isPermanentDeath() {
+            return lives == 0;
+        }
+    }
 
     public SnowWarsGame() {
         instances.add(this);
@@ -36,13 +72,13 @@ public class SnowWarsGame {
         this.startLives = startLives;
     }
 
-    public Integer getLivesRemaining(Player player) {
-        return playerLives.get(player);
+    public PlayerData getData(Player player) {
+        return players.get(player);
     }
 
     public void addPlayer(Player player) {
-        if (! players.contains(player)) {
-            players.add(player);
+        if (! players.containsKey(player)) {
+            players.put(player, new PlayerData(startLives));
             player.sendMessage(Messages.join);
         }
         else {
@@ -66,38 +102,50 @@ public class SnowWarsGame {
     }
 
     public void start() {
-        setNewRecipes();
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            setNewRecipes();
 
-        for (Player player: players) {
-            playerLives.put(player, startLives);
-            Location loc = nextSpawnLocation();
-            player.teleport(loc);
-            spawnLocations.put(player, loc);
-            player.setGameMode(GameMode.ADVENTURE);
-            asyncFilterInventory(player.getInventory());
-        }
-        started = true;
+            for (Player player : players.keySet()) {
+                Location loc = nextSpawnLocation();
+                player.teleport(loc);
+                players.get(player).spawnLocation = loc;
+                player.setGameMode(GameMode.ADVENTURE);
+                asyncFilterInventory(player.getInventory());
+                player.setAllowFlight(false);
+            }
+            started = true;
+        });
     }
 
     public void stop() {
-        setOldRecipes();
-        for (Player player: players) {
-            player.sendTitle(Messages.getPlayerWon(player.getDisplayName()), null, 1, 6, 2);
-            player.setGameMode(GameMode.ADVENTURE);
-            player.setAllowFlight(true);
-        }
+        if (! started) throw new IllegalStateException("you cannot stop a game that hasn't started");
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
-            Player winner = playerLives.keySet().iterator().next();
-            for (int i = 0; i < 40; i++) {
-                Location loc = winner.getLocation();
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
-                        "minecraft:summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
-                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ignore) {}
+            Player winner = null;
+            for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
+                if (!entry.getValue().isPermanentDeath()) {
+                    winner = entry.getKey();
+                    break;
+                }
             }
-            for (Player player: players) {
+            String winnerName = winner == null ? "<error>" : winner.getDisplayName();
+            for (Player player: players.keySet()) {
+                player.sendTitle(Messages.getPlayerWon(winnerName), null, 20, 120, 40);
+                player.setGameMode(GameMode.ADVENTURE);
+                player.setAllowFlight(true);
+            }
+            if (winner != null) {
+                for (int i = 0; i < 40; i++) {
+                    Location loc = winner.getLocation();
+                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                            "minecraft:summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
+                                    + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignore) { }
+                }
+            }
+            for (Player player: players.keySet()) {
                 player.teleport(Config.location);
                 player.setAllowFlight(false);
             }
@@ -105,42 +153,54 @@ public class SnowWarsGame {
         started = false;
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    public Set<Player> getPlayers() {
+        return players.keySet();
     }
 
+    @Deprecated
     public void playerDied(PlayerDeathEvent playerDeathEvent) {
         final Player deadPlayer = playerDeathEvent.getEntity();
-        if (playerLives.containsKey(deadPlayer)) {
-            int lives = playerLives.get(deadPlayer) - 1;
-            int remainingPLayers = lives == 0 ? playerLives.size() - 1 : playerLives.size();
+        final PlayerData playerData = players.get(deadPlayer);
+        Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+            if (players.containsKey(deadPlayer)) {
+                deadPlayer.spigot().respawn();
+                playerData.isGhost = true;
+                deadPlayer.teleport(playerData.spawnLocation);
+                deadPlayer.setGameMode(GameMode.SPECTATOR);
+                int lives = --players.get(deadPlayer).lives;
+                int remainingPLayers = 0;
+                for (PlayerData data : players.values()) {
+                    if (data.lives != 0) remainingPLayers++;
+                }
 
-            deadPlayer.setGameMode(GameMode.SPECTATOR);
-            deadPlayer.spigot().respawn();
+                for (Player playingPlayer : players.keySet()) {
+                    playingPlayer.sendMessage(Messages.getPlayerDiedOrKilledBroadcast(deadPlayer.getDisplayName(),
+                            String.valueOf(remainingPLayers),
+                            String.valueOf(playerData.lives),
+                            playerDeathEvent.getEntity().getKiller()));
+                }
 
-            for (Player playingPlayer: players) {
-                playingPlayer.sendMessage(Messages.getPlayerDiedBroadcast(deadPlayer.getDisplayName(), String.valueOf(remainingPLayers)));
+                if (lives == 0) {
+                    deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
+                            Messages.playerDiedForeverSubtitle,
+                            20, 160, 40);
+                } else {
+                    deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
+                            Messages.getPlayerDiedSubtitle(String.valueOf(lives), Config.respawnDelay + "s"),
+                            20, 140, 40);
+
+                    if (remainingPLayers <= 1 && started) stop();
+                    else {
+                        Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                            deadPlayer.teleport(playerData.spawnLocation);
+                            deadPlayer.setGameMode(GameMode.ADVENTURE);
+                            deadPlayer.sendMessage(Messages.youResuscitated);
+                            playerData.isGhost = false;
+                        }, Config.respawnDelay * 20L);
+                    }
+                }
             }
-
-            if (lives == 0) {
-                playerLives.remove(deadPlayer);
-                deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
-                        Messages.playerDiedForeverSubtitle,
-                        1, 6, 2);
-            } else {
-                deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
-                        Messages.getPlayerDiedSubtitle(String.valueOf(lives)),
-                        1, 4, 2);
-                Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                    deadPlayer.teleport(spawnLocations.get(deadPlayer));
-                    deadPlayer.setGameMode(GameMode.ADVENTURE);
-                    deadPlayer.sendMessage(Messages.youResuscitated);
-                }, Config.respawnDelay * 20L);
-            }
-        }
-
-        if (playerLives.size() <= 1) stop();
-
+        }, 1);
     }
 
     private int i = 0;

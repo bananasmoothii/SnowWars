@@ -24,20 +24,24 @@ world: world
 # main spawn location, set via /snowwars setmainspawn, can be X Y Z or X Y Z Yaw Pitch
 location: 0 64 0
 # delay in seconds before I dead player respawns
-respawn-delay: 6
+respawn-delay: 20
 # modifies the craft of snow to make 2 of them each time
 crafted-snow-amount: 2
+# if the players falls more than X blocks down, he instantly gets killed. Set to 0 to disable.
+max-fall-height: 20.0
 # set via /snowwars addspawn
 spawn-locations: []
 
 messages:
   playerDiedBroadcast: '§c§l{player}§c died!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
+  playerKilledBroadcast: '§c§l{killer}§c killed §l{victim}§e!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
   playerDiedTitle: '§4You died !'
-  playerDiedSubtitle: '§6You have §l{lives}§6 lives left.§3 You will respawn in §l{time}s§3.'
+  playerDiedSubtitle: '§6You have §l{lives}§6 lives left.§3 You will respawn in §l{time}§3.'
   playerDiedForeverSubtitle: '§cYou won''t respawn as you have no more lives.'
   noPerm: '§cYou don''t have the permission {perm}'
   join: '§aYou joined the §lSnow Wars§a game!'
   alreadyJoined: '§eYou already joined, but I can teleport you here if you want.'
   youResuscitated: '§2You got respawned!'
   playerWon: '§b§l§n{player}§b won!'
+  alreadyStarted: '§eYou can''t do that as the game already started!'
 

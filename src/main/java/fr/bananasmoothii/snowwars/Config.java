@@ -3,6 +3,7 @@ package fr.bananasmoothii.snowwars;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -27,22 +28,25 @@ public abstract class Config {
     public static List<Location> spawnLocations;
     public static int respawnDelay;
     public static int craftedSnowAmount;
+    public static double maxFallHeight;
 
     public static class Messages {
         public static Map<String, String> raw;
-        public static String playerDiedBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
-                noPerm, join, alreadyJoined, youResuscitated, playerWon;
+        public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
+                noPerm, join, alreadyJoined, youResuscitated, playerWon, alreadyStarted;
 
-        public static String getPlayerDiedBroadcast(String player, String remaining) {
-            return playerDiedBroadcast.replace("{player}", player).replace("{remaining}", remaining);
+        public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable Player killer) {
+            if (killer == null)
+                return playerDiedBroadcast.replace("{player}", player).replace("{remaining}", remaining).replace("{lives}", lives);
+            return playerKilledBroadcast.replace("{killer}", killer.getDisplayName()).replace("{victim}", player).replace("{remaining}", remaining).replace("{lives}", lives);
         }
 
         public static String getPlayerDiedTitle(String lives) {
             return playerDiedTitle.replace("{lives}", lives);
         }
 
-        public static String getPlayerDiedSubtitle(String lives) {
-            return playerDiedSubtitle.replace("{lives}", lives);
+        public static String getPlayerDiedSubtitle(String lives, String respawnTime) {
+            return playerDiedSubtitle.replace("{lives}", lives).replace("{time}", respawnTime);
         }
 
         public static String getNoPerm(String perm) {
@@ -125,6 +129,9 @@ public abstract class Config {
             probableCause = "crafted-snow-amount";
             craftedSnowAmount = (int) raw.get("crafted-snow-amount");
             PluginListener.snowBlockBreakMaxDrops = (int) Math.ceil(4.0 / craftedSnowAmount);
+
+            probableCause = "max-fall-height";
+            maxFallHeight = (double) (Double) raw.get("max-fall-height");
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");

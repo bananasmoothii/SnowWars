@@ -49,6 +49,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (mainSnowWarsGame == null) {
                     mainSnowWarsGame = new SnowWarsGame();
                 }
+                if (mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage(Config.Messages.alreadyStarted);
+                    return true;
+                }
                 if (args.length >= 2 && ! args[1].isEmpty()) {
                     if (hasNoPerm(sender, "snowwars.join.others")) return true;
                     if (args[1].equals("*")) {
@@ -76,6 +80,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     sender.sendMessage("§cNo game to start");
                     return false;
                 }
+                if (mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage(Config.Messages.alreadyStarted);
+                    return false;
+                }
                 if (Config.spawnLocations.isEmpty()) {
                     sender.sendMessage("§cYou need to add spawn locations first via §o/snowwars addspawn");
                 } else {
@@ -87,6 +95,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (hasNoPerm(sender, "snowwars.stop")) return true;
                 if (mainSnowWarsGame == null) {
                     sender.sendMessage("§cNo game to stop");
+                    return false;
+                }
+                if (!mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage("§cThe game didn't start");
                     return false;
                 }
                 mainSnowWarsGame.stop();

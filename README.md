@@ -15,12 +15,14 @@ It doesn't do everything alone
 ```yaml
 messages:
   playerDiedBroadcast: '§c§l{player}§c est mort !§e Il lui reste §l{lives}§e vies. §6§l{remaining}§6 joueurs restant !'
+  playerKilledBroadcast: '§c§l{killer}§c a tué §l{victim}§c !§e Il lui reste §l{lives}§e vies. §6§l{remaining}§6 joueurs restant !'
   playerDiedTitle: '§4Tu es mort !'
-  playerDiedSubtitle: '§6Il te reste §l{lives}§6 vies.§3 Tu pourras Réapparaître dans §l{time}s§3.'
+  playerDiedSubtitle: '§6Il te reste §l{lives}§6 vies.§3 Tu pourras Réapparaître dans §l{time}§3.'
   playerDiedForeverSubtitle: '§cTu ne pourras plus réapparaître, tu n''as plus de vies.'
   noPerm: '§cVous n''avez pas la permssion {perm}'
   join: '§aTu as rejoint le jeu de §lSnow Wars§a !'
   alreadyJoined: '§eTu avais déjà rejoint, mais je te retéléporte ici si tu veux.'
   youResuscitated: '§2Tu a été ressuscité !'
   playerWon: '§b§l§n{player}§b a gagné !'
+  alreadyStarted: '§eTu ne peux pas faire ça vu que la partie a déjà commencé !'
 ```
