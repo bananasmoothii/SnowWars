@@ -112,6 +112,8 @@ public class SnowWarsGame {
                 player.setGameMode(GameMode.ADVENTURE);
                 if (Config.clearInventory)
                     player.getInventory().clear();
+                player.setHealth(20);
+                player.setFoodLevel(20);
                 for (String string: Config.startSet) {
                     Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
                             "minecraft:give " + player.getName() + ' ' + string);
