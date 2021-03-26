@@ -114,15 +114,19 @@ public class SnowWarsGame {
                     player.getInventory().clear();
                 player.setHealth(20);
                 player.setFoodLevel(20);
-                for (String string: Config.startSet) {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
-                            "minecraft:give " + player.getName() + ' ' + string);
-                }
+                giveStartKit(player);
                 asyncFilterInventory(player.getInventory());
                 player.setAllowFlight(false);
             }
             started = true;
         });
+    }
+
+    private static void giveStartKit(Player player) {
+        for (String string: Config.startSet) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
+                    "minecraft:give " + player.getName() + ' ' + string);
+        }
     }
 
     public void stop() {
@@ -178,7 +182,7 @@ public class SnowWarsGame {
                 int lives = --players.get(deadPlayer).lives;
                 int remainingPLayers = 0;
                 for (PlayerData data : players.values()) {
-                    if (data.lives != 0) remainingPLayers++;
+                    if (data.lives > 0) remainingPLayers++;
                 }
 
                 for (Player playingPlayer : players.keySet()) {
@@ -188,7 +192,7 @@ public class SnowWarsGame {
                             playerDeathEvent.getEntity().getKiller()));
                 }
 
-                if (lives == 0) {
+                if (lives <= 0) {
                     deadPlayer.sendTitle(Messages.getPlayerDiedTitle(String.valueOf(lives)),
                             Messages.playerDiedForeverSubtitle,
                             20, 160, 40);
@@ -204,6 +208,7 @@ public class SnowWarsGame {
                             deadPlayer.setGameMode(GameMode.ADVENTURE);
                             deadPlayer.sendMessage(Messages.youResuscitated);
                             playerData.isGhost = false;
+                            if (Config.giveAtRespawn) giveStartKit(deadPlayer);
                         }, Config.respawnDelay * 20L);
                     }
                 }

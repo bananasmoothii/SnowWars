@@ -1,21 +1,26 @@
 package fr.bananasmoothii.snowwars;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.projectiles.BlockProjectileSource;
+import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
@@ -109,5 +114,37 @@ public class PluginListener implements Listener {
         } else {
             fallingPlayers.remove(player);
         }
+    }
+
+    @EventHandler
+    public void onProjectileHitEvent(ProjectileHitEvent event) {
+        if (event.getEntity().getType() != EntityType.SNOWBALL || !(event.getHitEntity() instanceof Player)) return;
+        Player hitPlayer = (Player) event.getHitEntity();
+        Vector velocity = hitPlayer.getVelocity();
+        ProjectileSource source = event.getEntity().getShooter();
+        if (source instanceof LivingEntity) {
+            velocity.add(getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation()).normalize());
+            hitPlayer.damage(0.5, (Entity) source);
+        } else if (source instanceof BlockProjectileSource) {
+            Block blockSource = ((BlockProjectileSource) source).getBlock();
+            velocity.add(getVectorFromAToB(blockSource.getX(), blockSource.getY(), blockSource.getZ(), hitPlayer.getLocation()));
+            hitPlayer.damage(1, event.getEntity());
+        }
+        velocity.normalize();
+        velocity.multiply(Config.snowballKnockbackMultiplier);
+        //velocity.setY(velocity.getY() + 0.25);
+        hitPlayer.setVelocity(velocity);
+    }
+
+    private Vector getVectorFromAToB(int ax, int ay, int az, Location b) {
+        return new Vector(b.getX() - ax, b.getY() - ay, b.getZ() - az);
+    }
+
+    public static @NotNull Vector getVectorFromAToB(double ax, double ay, double az, double bx, double by, double bz) {
+        return new Vector(bx - ax, by - ay, bz - az);
+    }
+
+    public static @NotNull Vector getVectorFromAToB(Location a, Location b) {
+        return new Vector(b.getX() - a.getX(), b.getY() - a.getY(), b.getZ() - a.getZ());
     }
 }

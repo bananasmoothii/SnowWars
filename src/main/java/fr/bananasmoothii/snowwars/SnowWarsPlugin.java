@@ -132,7 +132,8 @@ public final class SnowWarsPlugin extends JavaPlugin {
             case "reload":
                 if (hasNoPerm(sender, "snowwars.reload")) return true;
                 if (mainSnowWarsGame != null) {
-                    mainSnowWarsGame.stop();
+                    if (mainSnowWarsGame.isStarted())
+                        mainSnowWarsGame.stop();
                     mainSnowWarsGame = null;
                 }
                 Config.load(this::saveDefaultConfig);

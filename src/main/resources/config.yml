@@ -39,12 +39,14 @@ snow-block-break-limit: 150
 # set given at each players. This uses commands, so for example "sand" will become "/minecraft:give <player> sand".
 # This allows to put nbt tags and amounts to each item.
 start-set:
-  - 'stone_shovel{Enchantments:[{id:"unbreaking",lvl:2s}]}'
+  - 'stone_shovel{Enchantments:[{id:"unbreaking",lvl:4s}]}'
   - 'snowball 16'
 # whether to give these items only at the beginning or at each respawn
 give-set-at-respawn: true
 # clear inventory on game start
 clear-inventory: true
+
+snowball-knockback-multiplier: 0.3333
 # set via /snowwars addspawn
 spawn-locations: []
 
@@ -52,7 +54,7 @@ messages:
   playerDiedBroadcast: '§c§l{player}§c died!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
   playerKilledBroadcast: '§c§l{killer}§c killed §l{victim}§e!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
   playerDiedTitle: '§4You died !'
-  playerDiedSubtitle: '§6You have §l{lives}§6 lives left.§3 You will respawn in §l{time}§3.'
+  playerDiedSubtitle: '§6§l{lives}§6 lives left.§3 You will respawn in §l{time}§3.'
   playerDiedForeverSubtitle: '§cYou won''t respawn as you have no more lives.'
   noPerm: '§cYou don''t have the permission {perm}'
   join: '§aYou joined the §lSnow Wars§a game!'

@@ -17,7 +17,7 @@ messages:
   playerDiedBroadcast: '§c§l{player}§c est mort !§e Il lui reste §l{lives}§e vies. §6§l{remaining}§6 joueurs restant !'
   playerKilledBroadcast: '§c§l{killer}§c a tué §l{victim}§c !§e Il lui reste §l{lives}§e vies. §6§l{remaining}§6 joueurs restant !'
   playerDiedTitle: '§4Tu es mort !'
-  playerDiedSubtitle: '§6Il te reste §l{lives}§6 vies.§3 Tu pourras Réapparaître dans §l{time}§3.'
+  playerDiedSubtitle: '§6§l{lives}§6 vies restantes.§3 Tu pourras Réapparaître dans §l{time}§3.'
   playerDiedForeverSubtitle: '§cTu ne pourras plus réapparaître, tu n''as plus de vies.'
   noPerm: '§cVous n''avez pas la permssion {perm}'
   join: '§aTu as rejoint le jeu de §lSnow Wars§a !'
