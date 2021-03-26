@@ -110,6 +110,11 @@ public class SnowWarsGame {
                 player.teleport(loc);
                 players.get(player).spawnLocation = loc;
                 player.setGameMode(GameMode.ADVENTURE);
+                player.getInventory().clear();
+                for (String string: Config.startSet) {
+                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
+                            "minecraft:give " + player.getName() + ' ' + string);
+                }
                 asyncFilterInventory(player.getInventory());
                 player.setAllowFlight(false);
             }
@@ -135,15 +140,16 @@ public class SnowWarsGame {
                 player.setAllowFlight(true);
             }
             if (winner != null) {
-                for (int i = 0; i < 40; i++) {
-                    Location loc = winner.getLocation();
+                final Player finalWinner = winner;
+                final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(), () -> {
+                    Location loc = finalWinner.getLocation();
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
                             "minecraft:summon firework_rocket " + loc.getX() + ' ' + loc.getY() + ' ' + loc.getZ()
                                     + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ignore) { }
-                }
+                }, 5, 10);
+                Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                    Bukkit.getScheduler().cancelTask(task);
+                }, 300);
             }
             for (Player player: players.keySet()) {
                 player.teleport(Config.location);

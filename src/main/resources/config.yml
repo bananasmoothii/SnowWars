@@ -2,14 +2,15 @@
 # Discord: https://discord.gg/HNHfEJXwbs
 # WARNING: All comments below will be gone after the first command that refreshes the config, if you want to find
 # a new config you can delete this one or go in https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml
+# WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...
 
 # blocks on which you can place snow in gamemode adventure
-canPlaceSnowOn:
+can-place-snow-on:
   - snow_block
   - snow
-  - quartz_block
+  - chiseled_quartz_block
 
-itemsAbleToBreakSnow:
+items-able-to-break-snow:
   - wooden_shovel
   - stone_shovel
   - iron_shovel
@@ -29,6 +30,16 @@ respawn-delay: 20
 crafted-snow-amount: 2
 # if the players falls more than X blocks down, he instantly gets killed. Set to 0 to disable.
 max-fall-height: 20.0
+# interval in ticks. When someone breaks a snow block, if snow blocks aren't bind to a block from the "canPlaceOn" list (appart from snow blocks and snow),
+# they recursively get break.
+snow-block-break-interval: 3
+# set given at each players. This uses commands, so for example "sand" will become "/minecraft:give <player> sand".
+# This allows to put nbt tags and amounts to each item.
+start-set:
+  - stone_shovel{ench:{id:34,lvl:2}}
+  - snow_ball 16
+# whether to give these items only at the beginning or at each respawn
+give-set-at-respawn: true
 # set via /snowwars addspawn
 spawn-locations: []
 

@@ -1,7 +1,10 @@
 package fr.bananasmoothii.snowwars;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,7 +13,9 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
@@ -20,16 +25,28 @@ public class PluginListener implements Listener {
     private static final Random random = new Random();
 
     @EventHandler
-    public void onBlockBreakEvent(BlockBreakEvent event) {
+    public void onBlockBreakEvent(final BlockBreakEvent event) {
+        Block block = event.getBlock();
         if (SnowWarsPlugin.mainSnowWarsGame == null
                 || ! SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(event.getPlayer())
                 || ! SnowWarsPlugin.mainSnowWarsGame.isStarted()) return;
-        if (event.getBlock().getType() == Material.SNOW_BLOCK) {
+        if (block.getType() == Material.SNOW_BLOCK) {
             int amountToDrop = random.nextInt(snowBlockBreakMaxDrops);
             if (amountToDrop == 0)
                 event.setDropItems(false);
         }
-        //Bukkit.getScheduler().runTaskAsynchronously()
+        blockBreaker(block.getRelative(BlockFace.NORTH));
+        blockBreaker(block.getRelative(BlockFace.EAST));
+        blockBreaker(block.getRelative(BlockFace.SOUTH));
+        blockBreaker(block.getRelative(BlockFace.WEST));
+        blockBreaker(block.getRelative(BlockFace.UP));
+        blockBreaker(block.getRelative(BlockFace.DOWN));
+    }
+
+    private void blockBreaker(Block block) {
+        if (block.getType() == Material.SNOW_BLOCK || block.getType() == Material.SNOW) {
+            new BlockBreaker(block);
+        }
     }
 
     @EventHandler

@@ -29,6 +29,9 @@ public abstract class Config {
     public static int respawnDelay;
     public static int craftedSnowAmount;
     public static double maxFallHeight;
+    public static int snowBlockBreakInterval;
+    public static List<String> startSet;
+    public static boolean giveAtRespawn;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -85,11 +88,11 @@ public abstract class Config {
 
         String probableCause = "no probable cause";
         try {
-            probableCause = "canPlaceSnowOn";
+            probableCause = "can-place-snow-on";
             canPlaceSnowOn = new ArrayList<>();
             canPlaceSnowOnStrings = new ArrayList<>();
-            for (String material : (List<String>) raw.get("canPlaceSnowOn")) {
-                probableCause = "canPlaceOnSnow." + material;
+            for (String material : (List<String>) raw.get("can-place-snow-on")) {
+                probableCause = "can-place-snow-on." + material;
                 Material givenMaterial = Material.getMaterial(material.toUpperCase());
                 if (givenMaterial == null) throw new InvalidConfigException();
                 assert givenMaterial.isSolid() : "The block " + givenMaterial.name() + " is not solid";
@@ -99,9 +102,9 @@ public abstract class Config {
 
             itemsAbleToBreakSnow = new ArrayList<>();
             itemsAbleToBreakSnowStrings = new ArrayList<>();
-            probableCause = "itemsAbleToBreakSnow";
-            for (String material : (List<String>) raw.get("itemsAbleToBreakSnow")) {
-                probableCause = "itemsAbleToBreakSnow." + material;
+            probableCause = "items-able-to-break-snow";
+            for (String material : (List<String>) raw.get("items-able-to-break-snow")) {
+                probableCause = "items-able-to-break-snow." + material;
                 Material givenMaterial = Material.getMaterial(material.toUpperCase());
                 if (givenMaterial == null) throw new InvalidConfigException();
                 itemsAbleToBreakSnow.add(givenMaterial);
@@ -132,6 +135,15 @@ public abstract class Config {
 
             probableCause = "max-fall-height";
             maxFallHeight = (double) (Double) raw.get("max-fall-height");
+
+            probableCause = "snow-block-break-interval";
+            snowBlockBreakInterval = (int) raw.get("snow-block-break-interval");
+
+            probableCause = "start-set";
+            startSet = (List<String>) raw.get("start-set");
+
+            probableCause = "give-set-at-respawn";
+            giveAtRespawn = (boolean) raw.get("give-set-at-respawn");
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");
