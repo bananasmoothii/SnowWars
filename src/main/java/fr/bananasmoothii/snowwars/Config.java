@@ -30,8 +30,10 @@ public abstract class Config {
     public static int craftedSnowAmount;
     public static double maxFallHeight;
     public static int snowBlockBreakInterval;
+    public static int snowBlockBreakLimit;
     public static List<String> startSet;
     public static boolean giveAtRespawn;
+    public static boolean clearInventory;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -139,11 +141,17 @@ public abstract class Config {
             probableCause = "snow-block-break-interval";
             snowBlockBreakInterval = (int) raw.get("snow-block-break-interval");
 
+            probableCause = "snow-block-break-limit";
+            snowBlockBreakLimit = (int) raw.get("snow-block-break-limit");
+
             probableCause = "start-set";
             startSet = (List<String>) raw.get("start-set");
 
             probableCause = "give-set-at-respawn";
             giveAtRespawn = (boolean) raw.get("give-set-at-respawn");
+
+            probableCause = "clear-inventory";
+            clearInventory = (boolean) raw.get("clear-inventory");
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");

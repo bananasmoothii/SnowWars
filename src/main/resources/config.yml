@@ -31,15 +31,20 @@ crafted-snow-amount: 2
 # if the players falls more than X blocks down, he instantly gets killed. Set to 0 to disable.
 max-fall-height: 20.0
 # interval in ticks. When someone breaks a snow block, if snow blocks aren't bind to a block from the "canPlaceOn" list (appart from snow blocks and snow),
-# they recursively get break.
-snow-block-break-interval: 3
+# they recursively get break. Set -1 to completely disable that feature.
+snow-block-break-interval: 2
+# limit of snow blocks that will be able to stay as a snow block structure bout to something other than snow.
+# if that limit is reached, blocks will break. This is checked only at block break event, and may be laggy (althought I have no problem with it)
+snow-block-break-limit: 150
 # set given at each players. This uses commands, so for example "sand" will become "/minecraft:give <player> sand".
 # This allows to put nbt tags and amounts to each item.
 start-set:
-  - stone_shovel{ench:{id:34,lvl:2}}
-  - snow_ball 16
+  - 'stone_shovel{Enchantments:[{id:"unbreaking",lvl:2s}]}'
+  - 'snowball 16'
 # whether to give these items only at the beginning or at each respawn
 give-set-at-respawn: true
+# clear inventory on game start
+clear-inventory: true
 # set via /snowwars addspawn
 spawn-locations: []
 

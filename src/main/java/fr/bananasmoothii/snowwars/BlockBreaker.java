@@ -18,7 +18,7 @@ public class BlockBreaker {
     private boolean boundToSolidBlock = false;
 
     public BlockBreaker(Block initialBlock) {
-        this(initialBlock, 50, true);
+        this(initialBlock, Config.snowBlockBreakLimit, true);
     }
 
     public BlockBreaker(Block initialBlock, int limit, boolean breakBlocksOnFinish) {
@@ -47,14 +47,7 @@ public class BlockBreaker {
             return;
         }
         toBreak.add(block);
-        /*
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(1, 0, 0)));
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(-1, 0, 0)));
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(0, 1, 0)));
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(0, -1, 0)));
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(0, 0, 1)));
-        scheduler.runTaskAsynchronously(inst, () -> checkBlock(block.getRelative(0, 0, -1)));
-        */
+
         checkBlock(block.getRelative(0, 0, -1));
         checkBlock(block.getRelative(1, 0, 0));
         checkBlock(block.getRelative(0, 0, 1));

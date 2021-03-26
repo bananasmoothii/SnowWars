@@ -110,7 +110,8 @@ public class SnowWarsGame {
                 player.teleport(loc);
                 players.get(player).spawnLocation = loc;
                 player.setGameMode(GameMode.ADVENTURE);
-                player.getInventory().clear();
+                if (Config.clearInventory)
+                    player.getInventory().clear();
                 for (String string: Config.startSet) {
                     Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
                             "minecraft:give " + player.getName() + ' ' + string);
@@ -163,7 +164,6 @@ public class SnowWarsGame {
         return players.keySet();
     }
 
-    @Deprecated
     public void playerDied(PlayerDeathEvent playerDeathEvent) {
         final Player deadPlayer = playerDeathEvent.getEntity();
         final PlayerData playerData = players.get(deadPlayer);
@@ -286,8 +286,6 @@ public class SnowWarsGame {
     private static NamespacedKey key(String name) {
         return new NamespacedKey(SnowWarsPlugin.inst(), name);
     }
-
-
 
     public static void asyncFilterInventory(Inventory inventory) {
         Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> filterInventory(inventory));

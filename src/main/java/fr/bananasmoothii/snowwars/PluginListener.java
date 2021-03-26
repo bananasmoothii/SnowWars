@@ -35,12 +35,14 @@ public class PluginListener implements Listener {
             if (amountToDrop == 0)
                 event.setDropItems(false);
         }
-        blockBreaker(block.getRelative(BlockFace.NORTH));
-        blockBreaker(block.getRelative(BlockFace.EAST));
-        blockBreaker(block.getRelative(BlockFace.SOUTH));
-        blockBreaker(block.getRelative(BlockFace.WEST));
-        blockBreaker(block.getRelative(BlockFace.UP));
-        blockBreaker(block.getRelative(BlockFace.DOWN));
+        if (Config.snowBlockBreakInterval != -1) {
+            blockBreaker(block.getRelative(BlockFace.NORTH));
+            blockBreaker(block.getRelative(BlockFace.EAST));
+            blockBreaker(block.getRelative(BlockFace.SOUTH));
+            blockBreaker(block.getRelative(BlockFace.WEST));
+            blockBreaker(block.getRelative(BlockFace.UP));
+            blockBreaker(block.getRelative(BlockFace.DOWN));
+        }
     }
 
     private void blockBreaker(Block block) {
