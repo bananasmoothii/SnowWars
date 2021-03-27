@@ -131,8 +131,8 @@ public class PluginListener implements Listener {
             hitPlayer.damage(1, event.getEntity());
         }
         velocity.normalize();
+        velocity.setY(velocity.getY() + Config.snowballYAdd);
         velocity.multiply(Config.snowballKnockbackMultiplier);
-        //velocity.setY(velocity.getY() + 0.25);
         hitPlayer.setVelocity(velocity);
     }
 

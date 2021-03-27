@@ -46,7 +46,9 @@ give-set-at-respawn: true
 # clear inventory on game start
 clear-inventory: true
 
-snowball-knockback-multiplier: 0.3333
+snowball-knockback-multiplier: 0.4
+# when a snowball hits a player and after the new momentum is calculated, the player will be boosted X blocks in the air
+snowball-y-add: 0.6
 # set via /snowwars addspawn
 spawn-locations: []
 

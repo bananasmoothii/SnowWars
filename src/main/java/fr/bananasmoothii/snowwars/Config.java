@@ -35,6 +35,7 @@ public abstract class Config {
     public static boolean giveAtRespawn;
     public static boolean clearInventory;
     public static double snowballKnockbackMultiplier;
+    public static double snowballYAdd;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -156,6 +157,9 @@ public abstract class Config {
 
             probableCause = "snowball-knockback-multiplier";
             snowballKnockbackMultiplier = (double) raw.get("snowball-knockback-multiplier");
+
+            probableCause = "snowball-y-add";
+            snowballYAdd = (double) raw.get("snowball-y-add");
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");
