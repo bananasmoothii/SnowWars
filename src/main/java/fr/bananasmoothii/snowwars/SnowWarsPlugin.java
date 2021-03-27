@@ -109,7 +109,6 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     return false;
                 }
                 mainSnowWarsGame.stop();
-                mainSnowWarsGame = null;
                 sender.sendMessage("§aGame stopped.");
                 return true;
             case "setmainspawn":
