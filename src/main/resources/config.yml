@@ -64,4 +64,5 @@ messages:
   youResuscitated: '§2You got respawned!'
   playerWon: '§b§l§n{player}§b won!'
   alreadyStarted: '§eYou can''t do that as the game already started!'
+  livesLeft: '§aLives left:'
 

@@ -9,6 +9,7 @@ import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.*;
+import org.bukkit.scoreboard.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -20,6 +21,7 @@ public class SnowWarsGame {
     private final Map<Player, PlayerData> players = new HashMap<>();
     private boolean started = false;
     private int startLives = Config.lives;
+    private Scoreboard scoreboard;
 
     public static class PlayerData {
         private int lives;
@@ -104,7 +106,9 @@ public class SnowWarsGame {
     public void start() {
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             setNewRecipes();
-
+            scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+            Objective objective = scoreboard.registerNewObjective("lives-left", "dummy", Messages.livesLeft);
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
             for (Player player : players.keySet()) {
                 Location loc = nextSpawnLocation();
                 player.teleport(loc);
@@ -118,8 +122,18 @@ public class SnowWarsGame {
                 asyncFilterInventory(player.getInventory());
                 player.setAllowFlight(false);
             }
+            updateScoreBoard();
             started = true;
         });
+    }
+
+    public void updateScoreBoard() {
+        Objective objective = scoreboard.getObjective("lives-left");
+        for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
+            Score score = objective.getScore(entry.getKey().getDisplayName());
+            score.setScore(entry.getValue().lives);
+            entry.getKey().setScoreboard(scoreboard);
+        }
     }
 
     private static void giveStartKit(Player player) {
@@ -156,6 +170,7 @@ public class SnowWarsGame {
                 }, 5, 10);
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                     Bukkit.getScheduler().cancelTask(task);
+                    scoreboard.getObjective("lives-left").unregister();
                 }, 300);
             }
             for (Player player: players.keySet()) {
@@ -184,6 +199,7 @@ public class SnowWarsGame {
                 for (PlayerData data : players.values()) {
                     if (data.lives > 0) remainingPLayers++;
                 }
+                updateScoreBoard();
 
                 for (Player playingPlayer : players.keySet()) {
                     playingPlayer.sendMessage(Messages.getPlayerDiedOrKilledBroadcast(deadPlayer.getDisplayName(),

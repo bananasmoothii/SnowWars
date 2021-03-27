@@ -40,7 +40,7 @@ public abstract class Config {
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
-                noPerm, join, alreadyJoined, youResuscitated, playerWon, alreadyStarted;
+                noPerm, join, alreadyJoined, youResuscitated, playerWon, alreadyStarted, livesLeft;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable Player killer) {
             if (killer == null)
