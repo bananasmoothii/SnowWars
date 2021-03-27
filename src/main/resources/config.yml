@@ -7,7 +7,7 @@
 # blocks on which you can place snow in gamemode adventure
 can-place-snow-on:
   - snow_block
-  - snow
+#  - snow
   - chiseled_quartz_block
 
 items-able-to-break-snow:
@@ -56,10 +56,11 @@ messages:
   playerDiedBroadcast: '§c§l{player}§c died!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
   playerKilledBroadcast: '§c§l{killer}§c killed §l{victim}§e!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
   playerDiedTitle: '§4You died !'
-  playerDiedSubtitle: '§6§l{lives}§6 lives left.§3 You will respawn in §l{time}§3.'
+  playerDiedSubtitle: '§6§l{lives}§6 lives left.§3 Respawn in §l{time}§3.'
   playerDiedForeverSubtitle: '§cYou won''t respawn as you have no more lives.'
   noPerm: '§cYou don''t have the permission {perm}'
   join: '§aYou joined the §lSnow Wars§a game!'
+  quit: '§eYou left the game.'
   alreadyJoined: '§eYou already joined, but I can teleport you here if you want.'
   youResuscitated: '§2You got respawned!'
   playerWon: '§b§l§n{player}§b won!'

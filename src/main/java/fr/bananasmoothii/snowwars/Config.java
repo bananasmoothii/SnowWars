@@ -40,7 +40,7 @@ public abstract class Config {
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
-                noPerm, join, alreadyJoined, youResuscitated, playerWon, alreadyStarted, livesLeft;
+                noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, livesLeft;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable Player killer) {
             if (killer == null)
@@ -206,6 +206,7 @@ public abstract class Config {
         spawnLocations.add(location);
         if (updateRaw) {
             List<String> configLocations = (List<String>) raw.get("spawn-locations");
+            configLocations.clear();
             for (Location loc: spawnLocations) {
                 configLocations.add(getStringLocation(loc));
             }

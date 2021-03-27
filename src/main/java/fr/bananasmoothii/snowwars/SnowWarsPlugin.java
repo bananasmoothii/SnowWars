@@ -79,6 +79,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     sender.sendMessage("§cYou can't do that.");
                 }
                 SnowWarsPlugin.mainSnowWarsGame.removePlayer((Player) sender);
+                sender.sendMessage(Config.Messages.quit);
                 return true;
             case "start":
                 if (hasNoPerm(sender, "snowwars.start")) return true;
