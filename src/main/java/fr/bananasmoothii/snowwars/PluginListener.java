@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Set;
 
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
 public class PluginListener implements Listener {
@@ -70,22 +72,6 @@ public class PluginListener implements Listener {
         }
     }
 
-    /*
-    @EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player
-            && SnowWarsPlugin.mainSnowWarsGame != null
-            && SnowWarsPlugin.mainSnowWarsGame.isStarted()
-            && SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(event.getEntity())
-            && event.getFinalDamage() > ((Damageable) event.getEntity()).getHealth())
-        {
-            event.setCancelled(true);
-            SnowWarsPlugin.mainSnowWarsGame.playerDied(((Player) event.getEntity()).getPlayer(), null);
-        }
-    }
-    
-     */
-
     private static final HashMap<Player, Double> fallingPlayers = new HashMap<>(); // double is the height where the player started to fall
 
     @EventHandler
@@ -122,12 +108,15 @@ public class PluginListener implements Listener {
         Player hitPlayer = (Player) event.getHitEntity();
         Vector velocity = hitPlayer.getVelocity();
         ProjectileSource source = event.getEntity().getShooter();
+        if (SnowWarsPlugin.mainSnowWarsGame != null
+                && ! SnowWarsPlugin.mainSnowWarsGame.isStarted()
+                && SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(hitPlayer)) return;
         if (source instanceof LivingEntity) {
-            velocity.add(getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation()).normalize());
+            velocity.add(Util.getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation()).normalize());
             hitPlayer.damage(0.5, (Entity) source);
         } else if (source instanceof BlockProjectileSource) {
             Block blockSource = ((BlockProjectileSource) source).getBlock();
-            velocity.add(getVectorFromAToB(blockSource.getX(), blockSource.getY(), blockSource.getZ(), hitPlayer.getLocation()));
+            velocity.add(Util.getVectorFromAToB(blockSource.getX(), blockSource.getY(), blockSource.getZ(), hitPlayer.getLocation()));
             hitPlayer.damage(1, event.getEntity());
         }
         velocity.normalize();
@@ -136,15 +125,15 @@ public class PluginListener implements Listener {
         hitPlayer.setVelocity(velocity);
     }
 
-    private Vector getVectorFromAToB(int ax, int ay, int az, Location b) {
-        return new Vector(b.getX() - ax, b.getY() - ay, b.getZ() - az);
-    }
-
-    public static @NotNull Vector getVectorFromAToB(double ax, double ay, double az, double bx, double by, double bz) {
-        return new Vector(bx - ax, by - ay, bz - az);
-    }
-
-    public static @NotNull Vector getVectorFromAToB(Location a, Location b) {
-        return new Vector(b.getX() - a.getX(), b.getY() - a.getY(), b.getZ() - a.getZ());
+    @EventHandler
+    public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
+        if (SnowWarsPlugin.mainSnowWarsGame == null || SnowWarsPlugin.mainSnowWarsGame.isStarted()) return;
+        Entity damager = event.getDamager();
+        Entity victim = event.getEntity();
+        Set<Player> snowWarsGamePlayers = SnowWarsPlugin.mainSnowWarsGame.getPlayers();
+        if (damager instanceof Player
+                && snowWarsGamePlayers.contains(damager)
+                && (victim.getType() == EntityType.SNOWMAN || snowWarsGamePlayers.contains(victim)))
+            event.setCancelled(true);
     }
 }
