@@ -1,5 +1,11 @@
 package fr.bananasmoothii.snowwars;
 
+import com.sk89q.worldedit.IncompleteRegionException;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,6 +17,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +43,8 @@ public abstract class Config {
     public static boolean clearInventory;
     public static double snowballKnockbackMultiplier;
     public static double snowballYAdd;
+    public static CuboidRegion sourceRegion;
+    public static Location sourceSpawn;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -170,7 +179,17 @@ public abstract class Config {
                     field.set(null, Messages.raw.get(field.getName()));
             }
 
-        } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException e) {
+            probableCause = "map";
+            Map<String, String> map = (Map<String, String>) raw.get("map");
+            if (map != null) {
+                World srcWorld = Bukkit.getWorld(map.get("world"));
+                sourceRegion = new CuboidRegion(BukkitAdapter.adapt(world),
+                        Util.locationToBlockVector3(getLocation(srcWorld, map.get("min"))),
+                        Util.locationToBlockVector3(getLocation(srcWorld, map.get("max"))));
+                sourceSpawn = getLocation(srcWorld, map.get("spawn"));
+            }
+
+        } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException | NullPointerException e) {
             CustomLogger.severe("Error while loading the config ! This is probably the cause : " + probableCause);
             e.printStackTrace();
         }
@@ -196,8 +215,6 @@ public abstract class Config {
         }
     }
 
-    protected static long lastRefresh = 0L;
-
     public static void addSpawnLocation(Location location) {
         addSpawnLocation(location, true);
     }
@@ -214,18 +231,47 @@ public abstract class Config {
         }
     }
 
-    public static String getStringLocation(Location location) {
-        return location.getX() + " " + location.getY() + " " + location.getZ() + " " + location.getYaw() + " " + location.getPitch();
+    public static String getStringLocation(Location l) {
+        if (l.getYaw() == 0 && l.getPitch() == 0) {
+            return l.getBlockX() + " " + l.getBlockY() + " " + l.getBlockZ();
+        }
+        return l.getX() + " " + l.getY() + " " + l.getZ() + " " + l.getYaw() + " " + l.getPitch();
     }
 
     public static void refreshConfig() {
-        if (lastRefresh == 0L || System.currentTimeMillis() - lastRefresh > 20000) {
-            try {
-                yaml.dump(raw, new FileWriter("plugins/SnowWars/config.yml"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            yaml.dump(raw, new FileWriter("plugins/SnowWars/config.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
+    public static boolean setSource(Player player) {
+        World world = player.getWorld();
+        Region source;
+        try {
+            source = WorldEdit.getInstance().getSessionManager().findByName(player.getName()).getSelection();
+        } catch (IncompleteRegionException | NullPointerException e) {
+            player.sendMessage("§cUnbale to get your current selection");
+            return false;
+        }
+        if (! (source instanceof CuboidRegion)) {
+            player.sendMessage("§cYour selection is not cuboid");
+            return false;
+        }
+        setSource((CuboidRegion) source, player.getLocation());
+        return true;
+    }
+
+    public static void setSource(CuboidRegion sourceRegion, Location sourceSpawn) {
+        Config.sourceRegion = sourceRegion;
+        Config.sourceSpawn = sourceSpawn;
+        HashMap<String, String> map = new HashMap<>();
+        map.put("world", sourceRegion.getWorld().getName());
+        map.put("min", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMinimumPoint(), sourceSpawn.getWorld())));
+        map.put("max", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMaximumPoint(), sourceSpawn.getWorld())));
+        map.put("spawn", getStringLocation(sourceSpawn));
+        raw.put("map", map);
+        refreshConfig();
+    }
 }

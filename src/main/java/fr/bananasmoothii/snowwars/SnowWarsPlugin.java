@@ -1,5 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
+import com.sk89q.worldedit.WorldEditException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -75,10 +76,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 }
                 return true;
             case "quit":
-                if (SnowWarsPlugin.mainSnowWarsGame==null || !SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(sender)) {
+                if (mainSnowWarsGame==null || !mainSnowWarsGame.getPlayers().contains(sender)) {
                     sender.sendMessage("§cYou can't do that.");
                 }
-                SnowWarsPlugin.mainSnowWarsGame.removePlayer((Player) sender);
+                mainSnowWarsGame.removePlayer((Player) sender);
                 sender.sendMessage(Config.Messages.quit);
                 return true;
             case "start":
@@ -145,6 +146,26 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 Config.load(this::saveDefaultConfig);
                 sender.sendMessage("§aConfig reloaded.");
                 return true;
+            case "setsource":
+                if (! (sender instanceof Player)) {
+                    sender.sendMessage("Only an ingame player can do that");
+                    return false;
+                }
+                if (hasNoPerm(sender, "snowwars.setsource")) return true;
+                return Config.setSource((Player) sender);
+            case "refreshmap":
+                if (hasNoPerm(sender, "snowwars.refreshmap")) return true;
+                try {
+                    SnowWarsGame.refreshMap();
+                    return true;
+                } catch (WorldEditException e) {
+                    sender.sendMessage("§cAn error occurred, see console for details");
+                    e.printStackTrace();
+                    return false;
+                } catch (NullPointerException e) {
+                    sender.sendMessage("§cAn error occurred, you probably didn't set the source with /snowwars setsource");
+                    e.printStackTrace();
+                }
             default:
                 return false;
         }

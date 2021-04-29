@@ -1,5 +1,12 @@
 package fr.bananasmoothii.snowwars;
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
 import fr.bananasmoothii.snowwars.Config.Messages;
 import net.minecraft.server.v1_16_R3.NBTTagCompound;
 import net.minecraft.server.v1_16_R3.NBTTagList;
@@ -9,7 +16,10 @@ import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.*;
-import org.bukkit.scoreboard.*;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -107,6 +117,15 @@ public class SnowWarsGame {
     }
 
     public void start() {
+        try {
+            refreshMap();
+        } catch (WorldEditException e) {
+            e.printStackTrace();
+            CustomLogger.warning("the map will not be copied");
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars setsource");
+        }
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             setNewRecipes();
             scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
@@ -365,5 +384,19 @@ public class SnowWarsGame {
         }
         nmsItemStack.setTag(compound);
         return CraftItemStack.asBukkitCopy(nmsItemStack);
+    }
+
+    public static void refreshMap() throws WorldEditException {
+        com.sk89q.worldedit.world.World srcWorld = BukkitAdapter.adapt(Config.sourceSpawn.getWorld());
+        com.sk89q.worldedit.world.World destWorld = BukkitAdapter.adapt(Config.location.getWorld());
+        BlockVector3 srcCenter = BlockVector3.at(Config.sourceSpawn.getBlockX(), Config.sourceSpawn.getBlockY(), Config.sourceSpawn.getBlockZ());
+        BlockVector3 destCenter = BlockVector3.at(Config.location.getBlockX(), Config.location.getBlockY(), Config.location.getBlockZ());
+
+        try (EditSession editSession = WorldEdit.getInstance().newEditSession(destWorld)) {
+            ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(srcWorld, Config.sourceRegion, srcCenter, editSession, destCenter);
+            forwardExtentCopy.setCopyingEntities(true);
+            // configure here
+            Operations.complete(forwardExtentCopy);
+        }
     }
 }

@@ -127,7 +127,7 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
-        if (SnowWarsPlugin.mainSnowWarsGame == null || SnowWarsPlugin.mainSnowWarsGame.isStarted()) return;
+        if (SnowWarsPlugin.mainSnowWarsGame == null) return;
         Entity damager = event.getDamager();
         Entity victim = event.getEntity();
         Set<Player> snowWarsGamePlayers = SnowWarsPlugin.mainSnowWarsGame.getPlayers();
