@@ -1,26 +1,37 @@
 package fr.bananasmoothii.snowwars;
 
 import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.function.mask.BlockMask;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import fr.bananasmoothii.snowwars.Config.Messages;
 import net.minecraft.server.v1_16_R3.NBTTagCompound;
 import net.minecraft.server.v1_16_R3.NBTTagList;
 import net.minecraft.server.v1_16_R3.NBTTagString;
 import org.bukkit.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.*;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -32,6 +43,7 @@ public class SnowWarsGame {
     private boolean started = false;
     private int startLives = Config.lives;
     private Scoreboard scoreboard;
+    private @Nullable BukkitTask iceEventTask;
 
     public static class PlayerData {
         private int lives;
@@ -74,6 +86,8 @@ public class SnowWarsGame {
 
     public SnowWarsGame() {
         instances.add(this);
+        replaceFromBlocks.add(BlockTypes.STRUCTURE_BLOCK.getDefaultState().toBaseBlock());
+        replaceToBlock = BlockTypes.ICE.getDefaultState().toBaseBlock();
     }
 
     public int getStartLives() {
@@ -149,8 +163,48 @@ public class SnowWarsGame {
             }
             updateScoreBoard();
             started = true;
+            iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
+                    Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
         });
     }
+
+    public void iceEvent() {
+        final long startTime = System.currentTimeMillis();
+        final BossBar bossBar = Bukkit.getServer().createBossBar(
+                Messages.getBossBar(String.valueOf(Config.iceEventKeep)),
+                BarColor.BLUE, BarStyle.SOLID);
+        bossBar.setProgress(1.0);
+        for (Player player: getPlayers()) {
+            player.playSound(player.getLocation(), Sound.ENTITY_WITCH_CELEBRATE, 0.6f, 1f);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 0.5f);
+            bossBar.addPlayer(player);
+        }
+        final BukkitTask countDownTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), () -> {
+            // in seconds
+            double timeRemaining = (System.currentTimeMillis() - startTime) / 1000d;
+            bossBar.setTitle(Messages.getBossBar(String.valueOf(Math.ceil(timeRemaining * 10) / 10)));
+            bossBar.setProgress(timeRemaining / Config.iceEventKeep);
+            if (timeRemaining < 3)
+                bossBar.setColor(BarColor.RED);
+        }, 1, 1);
+        try {
+            iceEditSession.replaceBlocks(Config.snowWarsRegion, replaceFromBlocks, replaceToBlock);
+            Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                countDownTask.cancel();
+                for (Player player: getPlayers()) {
+                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.8f);
+                    bossBar.removeAll();
+                }
+                iceEditSession.undo(iceEditSession);
+            }, Config.iceEventKeep * 20L);
+        } catch (MaxChangedBlocksException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private final EditSession iceEditSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world));
+    private final Set<BaseBlock> replaceFromBlocks = new HashSet<>();
+    private final BaseBlock replaceToBlock;
 
     public void updateScoreBoard() {
         Objective objective = scoreboard.getObjective("lives-left");
@@ -173,6 +227,8 @@ public class SnowWarsGame {
 
     public void stop() {
         if (! started) throw new IllegalStateException("you cannot stop a game that hasn't started");
+        iceEventTask.cancel();
+        iceEventTask = null;
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             Player winner = null;

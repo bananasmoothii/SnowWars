@@ -27,4 +27,5 @@ messages:
   playerWon: '§b§l§n{player}§b a gagné !'
   alreadyStarted: '§eTu ne peux pas faire ça vu que la partie a déjà commencé !'
   livesLeft: '§aVies restantes:'
+  bossBar: '§bPonts de glace: §l{time}s§b restante !'
 ```

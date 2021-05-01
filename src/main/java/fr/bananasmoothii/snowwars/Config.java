@@ -3,6 +3,7 @@ package fr.bananasmoothii.snowwars;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import org.bukkit.Bukkit;
@@ -45,11 +46,14 @@ public abstract class Config {
     public static double snowballYAdd;
     public static CuboidRegion sourceRegion;
     public static Location sourceSpawn;
+    public static int iceEventDelay;
+    public static int iceEventKeep;
+    public static CuboidRegion snowWarsRegion;
 
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
-                noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, livesLeft;
+                noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, livesLeft, bossBar;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable Player killer) {
             if (killer == null)
@@ -72,6 +76,10 @@ public abstract class Config {
         public static String getPlayerWon(String player) {
             return playerWon.replace("{player}", player);
         }
+
+        public static String getBossBar(String time) {
+            return playerWon.replace("{time}", time);
+        }
     }
 
     static {
@@ -86,7 +94,7 @@ public abstract class Config {
     public static void load(@Nullable Runnable createConfigRunnable) {
         InputStream inputStream;
         try {
-            inputStream = new FileInputStream("plugins/SnowWars/config.yml");
+            inputStream = new FileInputStream("plugins/SnowWars/yml");
         } catch (FileNotFoundException e) {
             if (createConfigRunnable != null) {
                 createConfigRunnable.run();
@@ -170,6 +178,12 @@ public abstract class Config {
             probableCause = "snowball-y-add";
             snowballYAdd = (double) raw.get("snowball-y-add");
 
+            probableCause = "ice-event-delay";
+            iceEventDelay = (int) raw.get("ice-event-delay");
+
+            probableCause = "ice-event-keep";
+            iceEventKeep = (int) raw.get("ice-event-keep");
+
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");
 
@@ -188,6 +202,21 @@ public abstract class Config {
                         Util.locationToBlockVector3(getLocation(srcWorld, map.get("max"))));
                 sourceSpawn = getLocation(srcWorld, map.get("spawn"));
             }
+
+            BlockVector3 minimumPoint = sourceRegion.getMinimumPoint();
+            BlockVector3 maximumPoint = sourceRegion.getMaximumPoint();
+            snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(world),
+                    BlockVector3.at(
+                            location.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                            location.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                            location.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                    ),
+                    BlockVector3.at(
+                            location.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                            location.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                            location.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                    )
+            );
 
         } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException | NullPointerException e) {
             CustomLogger.severe("Error while loading the config ! This is probably the cause : " + probableCause);
@@ -240,7 +269,7 @@ public abstract class Config {
 
     public static void refreshConfig() {
         try {
-            yaml.dump(raw, new FileWriter("plugins/SnowWars/config.yml"));
+            yaml.dump(raw, new FileWriter("plugins/SnowWars/yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -264,8 +293,8 @@ public abstract class Config {
     }
 
     public static void setSource(CuboidRegion sourceRegion, Location sourceSpawn) {
-        Config.sourceRegion = sourceRegion;
-        Config.sourceSpawn = sourceSpawn;
+        sourceRegion = sourceRegion;
+        sourceSpawn = sourceSpawn;
         HashMap<String, String> map = new HashMap<>();
         map.put("world", sourceRegion.getWorld().getName());
         map.put("min", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMinimumPoint(), sourceSpawn.getWorld())));

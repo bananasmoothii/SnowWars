@@ -19,7 +19,7 @@ items-able-to-break-snow:
   - netherite_shovel
 
 # lives at new game for each player
-lives: 5
+lives: 3
 # world for the main spawn location, set via /snowwars setmainspawn
 world: world
 # main spawn location, set via /snowwars setmainspawn, can be X Y Z or X Y Z Yaw Pitch
@@ -46,6 +46,11 @@ give-set-at-respawn: true
 # clear inventory on game start
 clear-inventory: true
 
+# delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
+ice-event-delay: 300
+# delay in seconds to keep the ice event
+ice-event-keep: 10
+
 snowball-knockback-multiplier: 0.4
 # when a snowball hits a player and after the new momentum is calculated, the player will be boosted X blocks in the air
 snowball-y-add: 0.6
@@ -66,4 +71,5 @@ messages:
   playerWon: '§b§l§n{player}§b won!'
   alreadyStarted: '§eYou can''t do that as the game already started!'
   livesLeft: '§aLives left:'
+  bossBar: '§bIce bridges: §l{time}s§b left !'
 
