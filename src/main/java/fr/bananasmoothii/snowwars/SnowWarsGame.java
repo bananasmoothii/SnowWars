@@ -5,12 +5,9 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.function.mask.BlockMask;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import fr.bananasmoothii.snowwars.Config.Messages;
@@ -86,7 +83,7 @@ public class SnowWarsGame {
 
     public SnowWarsGame() {
         instances.add(this);
-        replaceFromBlocks.add(BlockTypes.STRUCTURE_BLOCK.getDefaultState().toBaseBlock());
+        replaceFromBlocks.add(BlockTypes.STRUCTURE_VOID.getDefaultState().toBaseBlock());
         replaceToBlock = BlockTypes.ICE.getDefaultState().toBaseBlock();
     }
 
@@ -162,9 +159,9 @@ public class SnowWarsGame {
                 player.setAllowFlight(false);
             }
             updateScoreBoard();
-            started = true;
             iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
                     Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
+            started = true;
         });
     }
 
@@ -175,13 +172,13 @@ public class SnowWarsGame {
                 BarColor.BLUE, BarStyle.SOLID);
         bossBar.setProgress(1.0);
         for (Player player: getPlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_WITCH_CELEBRATE, 0.6f, 1f);
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 0.5f);
+            player.playSound(player.getLocation(), Sound.ENTITY_WITCH_CELEBRATE, 0.4f, 1.5f);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.85f, 0.5f);
             bossBar.addPlayer(player);
         }
         final BukkitTask countDownTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), () -> {
             // in seconds
-            double timeRemaining = (System.currentTimeMillis() - startTime) / 1000d;
+            double timeRemaining = Config.iceEventKeep - (System.currentTimeMillis() - startTime) / 1000d;
             bossBar.setTitle(Messages.getBossBar(String.valueOf(Math.ceil(timeRemaining * 10) / 10)));
             bossBar.setProgress(timeRemaining / Config.iceEventKeep);
             if (timeRemaining < 3)
@@ -192,7 +189,7 @@ public class SnowWarsGame {
             Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                 countDownTask.cancel();
                 for (Player player: getPlayers()) {
-                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.8f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
                     bossBar.removeAll();
                 }
                 iceEditSession.undo(iceEditSession);

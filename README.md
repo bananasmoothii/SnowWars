@@ -1,15 +1,21 @@
 # SnowWars
 SnowWars is a little plugin that I made very quickly, made for making little minigames called "Snow Wars".
-It is very buggy. Don't expected a plugin for production, unless you know very well how to use it.
+It is buggy. Don't expected a plugin for production, unless you know very well how to use it.
 It doesn't do everything alone
 
+**This is SnowWars WorldEdit version, so it depends on WorldEdit *(currently not working
+with FastAsyncWorldEdit)***
+
 ## How to use:
-1. et the main spawn point with `/snowwars setmainspawn`
-2. Set as many spawn points as there are players with `/snowwars addspawn`
-3. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
+1. Set the main spawn point with `/snowwars setmainspawn`
+2. Use WorldEdit to select the region you want to copy at each game start and go to
+   the spawn point of that region, then do `/snowwars setsource`
+3. Set as many spawn points as there are players with `/snowwars addspawn`
+4. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
    for everyone in the current world with `*` as name
-4. Start the game with `/snowwwars start`
-5. Optionally stop with `/snowwars stop`
+5. Start the game with `/snowwwars start`
+6. Optionally stop with `/snowwars stop`
+7. `/snowwars reload` might help for some bugs
 
 ### French messages:
 ```yaml
@@ -27,5 +33,5 @@ messages:
   playerWon: '§b§l§n{player}§b a gagné !'
   alreadyStarted: '§eTu ne peux pas faire ça vu que la partie a déjà commencé !'
   livesLeft: '§aVies restantes:'
-  bossBar: '§bPonts de glace: §l{time}s§b restante !'
+  bossBar: '§bPonts de glace: §l{time}s§b restantes !'
 ```

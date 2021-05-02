@@ -10,4 +10,4 @@ depend:
 commands:
   snowwars:
     description: Main SnowWars command
-    usage: /snowwars join|start|stop|addspawn|setmainspawn|reload|setsource
+    usage: /snowwars join|quit|start|stop|addspawn|setmainspawn|reload|setsource

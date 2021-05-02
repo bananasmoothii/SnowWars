@@ -166,6 +166,17 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     sender.sendMessage("§cAn error occurred, you probably didn't set the source with /snowwars setsource");
                     e.printStackTrace();
                 }
+                sender.sendMessage("§aSuccessfully refreshed the map");
+                return true;
+            case "iceevent":
+                if (hasNoPerm(sender, "snowwars.iceevent")) return true;
+                if (mainSnowWarsGame == null || !mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage("§cNo game started");
+                    return false;
+                }
+                mainSnowWarsGame.iceEvent();
+                sender.sendMessage("§aTriggered ice event");
+                return true;
             default:
                 return false;
         }

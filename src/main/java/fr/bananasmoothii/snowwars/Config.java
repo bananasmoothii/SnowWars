@@ -78,7 +78,7 @@ public abstract class Config {
         }
 
         public static String getBossBar(String time) {
-            return playerWon.replace("{time}", time);
+            return bossBar.replace("{time}", time);
         }
     }
 
@@ -94,7 +94,7 @@ public abstract class Config {
     public static void load(@Nullable Runnable createConfigRunnable) {
         InputStream inputStream;
         try {
-            inputStream = new FileInputStream("plugins/SnowWars/yml");
+            inputStream = new FileInputStream("plugins/SnowWars/config.yml");
         } catch (FileNotFoundException e) {
             if (createConfigRunnable != null) {
                 createConfigRunnable.run();
@@ -201,22 +201,10 @@ public abstract class Config {
                         Util.locationToBlockVector3(getLocation(srcWorld, map.get("min"))),
                         Util.locationToBlockVector3(getLocation(srcWorld, map.get("max"))));
                 sourceSpawn = getLocation(srcWorld, map.get("spawn"));
-            }
 
-            BlockVector3 minimumPoint = sourceRegion.getMinimumPoint();
-            BlockVector3 maximumPoint = sourceRegion.getMaximumPoint();
-            snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(world),
-                    BlockVector3.at(
-                            location.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                            location.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                            location.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
-                    ),
-                    BlockVector3.at(
-                            location.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                            location.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                            location.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
-                    )
-            );
+                setSnowWarsRegion();
+            } else
+                CustomLogger.warning("the source map is not defined. Please run /snowwars setsource with a selection in game before starting any game.");
 
         } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException | NullPointerException e) {
             CustomLogger.severe("Error while loading the config ! This is probably the cause : " + probableCause);
@@ -269,14 +257,13 @@ public abstract class Config {
 
     public static void refreshConfig() {
         try {
-            yaml.dump(raw, new FileWriter("plugins/SnowWars/yml"));
+            yaml.dump(raw, new FileWriter("plugins/SnowWars/config.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static boolean setSource(Player player) {
-        World world = player.getWorld();
         Region source;
         try {
             source = WorldEdit.getInstance().getSessionManager().findByName(player.getName()).getSelection();
@@ -289,18 +276,37 @@ public abstract class Config {
             return false;
         }
         setSource((CuboidRegion) source, player.getLocation());
+        player.sendMessage("§aSuccessfully set the source from your selection and your position and refreshed the config.");
         return true;
     }
 
     public static void setSource(CuboidRegion sourceRegion, Location sourceSpawn) {
-        sourceRegion = sourceRegion;
-        sourceSpawn = sourceSpawn;
+        Config.sourceRegion = sourceRegion;
+        Config.sourceSpawn = sourceSpawn;
         HashMap<String, String> map = new HashMap<>();
         map.put("world", sourceRegion.getWorld().getName());
         map.put("min", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMinimumPoint(), sourceSpawn.getWorld())));
         map.put("max", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMaximumPoint(), sourceSpawn.getWorld())));
         map.put("spawn", getStringLocation(sourceSpawn));
         raw.put("map", map);
+        setSnowWarsRegion();
         refreshConfig();
+    }
+
+    private static void setSnowWarsRegion() {
+        BlockVector3 minimumPoint = sourceRegion.getMinimumPoint();
+        BlockVector3 maximumPoint = sourceRegion.getMaximumPoint();
+        snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(world),
+                BlockVector3.at(
+                        location.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                        location.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                        location.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                ),
+                BlockVector3.at(
+                        location.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                        location.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                        location.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                )
+        );
     }
 }
