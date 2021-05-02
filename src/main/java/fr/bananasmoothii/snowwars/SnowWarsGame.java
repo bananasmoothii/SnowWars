@@ -184,22 +184,23 @@ public class SnowWarsGame {
             if (timeRemaining < 3)
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
-        try {
-            iceEditSession.replaceBlocks(Config.snowWarsRegion, replaceFromBlocks, replaceToBlock);
+        try (final EditSession replaceEditSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world))) {
+            replaceEditSession.replaceBlocks(Config.snowWarsRegion, replaceFromBlocks, replaceToBlock);
             Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                 countDownTask.cancel();
                 for (Player player: getPlayers()) {
                     player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
-                    bossBar.removeAll();
                 }
-                iceEditSession.undo(iceEditSession);
+                bossBar.removeAll();
+                try (EditSession undoES = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world))) {
+                    replaceEditSession.undo(undoES);
+                }
             }, Config.iceEventKeep * 20L);
         } catch (MaxChangedBlocksException e) {
             e.printStackTrace();
         }
     }
 
-    private final EditSession iceEditSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world));
     private final Set<BaseBlock> replaceFromBlocks = new HashSet<>();
     private final BaseBlock replaceToBlock;
 
