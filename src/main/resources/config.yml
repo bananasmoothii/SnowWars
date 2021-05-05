@@ -29,7 +29,7 @@ respawn-delay: 20
 # modifies the craft of snow to make 2 of them each time
 crafted-snow-amount: 2
 # if the players falls more than X blocks down, he instantly gets killed. Set to 0 to disable.
-max-fall-height: 20.0
+max-fall-height: 40.0
 # interval in ticks. When someone breaks a snow block, if snow blocks aren't bind to a block from the "canPlaceOn" list (appart from snow blocks and snow),
 # they recursively get break. Set -1 to completely disable that feature.
 snow-block-break-interval: 2
@@ -45,6 +45,8 @@ start-set:
 give-set-at-respawn: true
 # clear inventory on game start
 clear-inventory: true
+# delay in seconds to freeze the player (so he can't move) at (re)spawning
+respawn-freeze: 0.6
 
 # delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
 ice-event-delay: 300

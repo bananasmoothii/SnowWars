@@ -46,6 +46,7 @@ public class SnowWarsGame {
         private int lives;
         private Location spawnLocation;
         private boolean isGhost = false;
+        private long lastRespawnTime;
 
         public PlayerData(int startLives, Location spawnLocation) {
             this.lives = startLives;
@@ -78,6 +79,14 @@ public class SnowWarsGame {
 
         public boolean isPermanentDeath() {
             return lives == 0;
+        }
+
+        protected void justRespawned() {
+            lastRespawnTime = System.currentTimeMillis();
+        }
+
+        public long getLastRespawnTime() {
+            return lastRespawnTime;
         }
     }
 
@@ -144,7 +153,12 @@ public class SnowWarsGame {
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
             shuffledSpawns = new ArrayList<>(Config.spawnLocations);
             Collections.shuffle(shuffledSpawns);
-            for (Player player : players.keySet()) {
+            for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
+                Player player = entry.getKey();
+                PlayerData data = entry.getValue();
+                data.lives = startLives;
+                data.isGhost = false;
+                data.justRespawned();
                 player.setScoreboard(scoreboard);
                 Location loc = nextSpawnLocation();
                 player.teleport(loc);
@@ -301,6 +315,7 @@ public class SnowWarsGame {
                             20, 140, 40);
 
                     Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                        playerData.justRespawned();
                         deadPlayer.teleport(playerData.spawnLocation);
                         deadPlayer.setGameMode(GameMode.ADVENTURE);
                         deadPlayer.sendMessage(Messages.youResuscitated);

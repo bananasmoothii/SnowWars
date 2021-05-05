@@ -49,6 +49,7 @@ public abstract class Config {
     public static int iceEventDelay;
     public static int iceEventKeep;
     public static CuboidRegion snowWarsRegion;
+    public static int respawnFreezeMillis;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -171,6 +172,9 @@ public abstract class Config {
 
             probableCause = "clear-inventory";
             clearInventory = (boolean) raw.get("clear-inventory");
+
+            probableCause = "respawn-freeze";
+            respawnFreezeMillis = (int) ((double) raw.get("respawn-freeze") * 1000);
 
             probableCause = "snowball-knockback-multiplier";
             snowballKnockbackMultiplier = (double) raw.get("snowball-knockback-multiplier");

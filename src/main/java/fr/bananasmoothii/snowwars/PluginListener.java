@@ -19,7 +19,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -80,9 +79,13 @@ public class PluginListener implements Listener {
         if (Config.maxFallHeight == 0
                 || SnowWarsPlugin.mainSnowWarsGame == null
                 || ! SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(player)
-                || ! SnowWarsPlugin.mainSnowWarsGame.isStarted()
                 || SnowWarsPlugin.mainSnowWarsGame.getData(player).isGhost())
             return;
+
+        if (System.currentTimeMillis() - SnowWarsPlugin.mainSnowWarsGame.getData(player).getLastRespawnTime() > Config.respawnFreezeMillis) {
+            event.setCancelled(true);
+            return;
+        }
 
         Location to = event.getTo();
         if (! to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() -1, to.getBlockZ()).getType().isSolid()) {
