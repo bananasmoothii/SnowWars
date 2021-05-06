@@ -32,6 +32,7 @@ messages:
   youResuscitated: '§2Tu a été ressuscité !'
   playerWon: '§b§l§n{player}§b a gagné !'
   alreadyStarted: '§eTu ne peux pas faire ça vu que la partie a déjà commencé !'
+  alreadyStartedSpectator: '§eTu as rejoint en tant que spéctateur étant donné que le jeu a déjà  commencé.'
   livesLeft: '§aVies restantes:'
   bossBar: '§bPonts de glace: §l{time}s§b restantes !'
 ```

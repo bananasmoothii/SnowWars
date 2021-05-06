@@ -50,10 +50,6 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (mainSnowWarsGame == null) {
                     mainSnowWarsGame = new SnowWarsGame();
                 }
-                if (mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage(Config.Messages.alreadyStarted);
-                    return true;
-                }
                 if (args.length >= 2 && ! args[1].isEmpty()) {
                     if (hasNoPerm(sender, "snowwars.join.others")) return true;
                     if (args[1].equals("*")) {

@@ -110,8 +110,15 @@ public class SnowWarsGame {
 
     public void addPlayer(Player player) {
         if (! players.containsKey(player)) {
-            players.put(player, new PlayerData(startLives));
-            player.sendMessage(Messages.join);
+            if (! started) {
+                players.put(player, new PlayerData(startLives));
+                player.sendMessage(Messages.join);
+            } else {
+                PlayerData data = new PlayerData(0);
+                data.isGhost = true;
+                players.put(player, data);
+                player.sendMessage(Messages.alreadyStartedSpectator);
+            }
         }
         else {
             player.sendMessage(Messages.alreadyJoined);
