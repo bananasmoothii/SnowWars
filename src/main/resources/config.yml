@@ -51,9 +51,9 @@ respawn-freeze: 0.6
 saturation-duration: 240
 
 # delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
-ice-event-delay: 300
+ice-event-delay: 150
 # delay in seconds to keep the ice event
-ice-event-keep: 10
+ice-event-keep: 20
 
 snowball-knockback-multiplier: 0.4
 # when a snowball hits a player and after the new momentum is calculated, the player will be boosted X blocks in the air
