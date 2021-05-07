@@ -35,4 +35,6 @@ messages:
   alreadyStartedSpectator: '§eTu as rejoint en tant que spéctateur étant donné que le jeu a déjà  commencé.'
   livesLeft: '§aVies restantes:'
   bossBar: '§bPonts de glace: §l{time}s§b restantes !'
+  notEnoughPlayers: '§cPas asser de joueurs pour commencer.'
+  startingIn: '§bAttention, début dans {time}s !'
 ```

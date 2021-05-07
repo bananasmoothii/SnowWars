@@ -47,6 +47,8 @@ give-set-at-respawn: true
 clear-inventory: true
 # delay in seconds to freeze the player (so he can't move) at (re)spawning
 respawn-freeze: 0.6
+# duration (in seconds) of the stauration effect given at respawn
+saturation-duration: 240
 
 # delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
 ice-event-delay: 300
@@ -75,4 +77,6 @@ messages:
   alreadyStartedSpectator: '§eYou are joining as a spectator as the game already started.'
   livesLeft: '§aLives left:'
   bossBar: '§bIce bridges: §l{time}s§b left !'
+  notEnoughPlayers: '§cNot enough players to start the game.'
+  startingIn: '§bThe game is starting in {time}s!'
 

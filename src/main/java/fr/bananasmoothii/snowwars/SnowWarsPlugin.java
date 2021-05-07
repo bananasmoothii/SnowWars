@@ -1,6 +1,7 @@
 package fr.bananasmoothii.snowwars;
 
 import com.sk89q.worldedit.WorldEditException;
+import fr.bananasmoothii.snowwars.Config.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -9,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public final class SnowWarsPlugin extends JavaPlugin {
@@ -76,16 +78,36 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     sender.sendMessage("§cYou can't do that.");
                 }
                 mainSnowWarsGame.removePlayer((Player) sender);
-                sender.sendMessage(Config.Messages.quit);
+                sender.sendMessage(Messages.quit);
                 return true;
             case "start":
-                if (hasNoPerm(sender, "snowwars.start")) return true;
+                if (mainSnowWarsGame == null || mainSnowWarsGame.getPlayers().size() < 2) {
+                    sender.sendMessage(Messages.notEnoughPlayers);
+                    return true;
+                }
+                if (mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage(Messages.alreadyStarted);
+                    return true;
+                }
+                final long softStartTime = System.currentTimeMillis();
+                BukkitTask countDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+                    for (Player player : mainSnowWarsGame.getPlayers()) {
+                        player.sendMessage(Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
+                    }
+                }, 0, 20);
+                Bukkit.getScheduler().runTaskLater(this, () -> {
+                    countDownTask.cancel();
+                    mainSnowWarsGame.start();
+                }, 200);
+                return true;
+            case "forcestart":
+                if (hasNoPerm(sender, "snowwars.forcestart")) return true;
                 if (mainSnowWarsGame == null) {
                     sender.sendMessage("§cNo game to start");
                     return false;
                 }
                 if (mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage(Config.Messages.alreadyStarted);
+                    sender.sendMessage(Messages.alreadyStarted);
                     return false;
                 }
                 if (Config.spawnLocations.isEmpty()) {
@@ -180,7 +202,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
 
     public static boolean hasNoPerm(CommandSender sender, String permission) {
         if (sender.hasPermission(permission) || sender.isOp()) return false;
-        sender.sendMessage(Config.Messages.getNoPerm(permission));
+        sender.sendMessage(Messages.getNoPerm(permission));
         return true;
     }
 }

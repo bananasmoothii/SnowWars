@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
+import static fr.bananasmoothii.snowwars.SnowWarsPlugin.mainSnowWarsGame;
+
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
 public class PluginListener implements Listener {
 
@@ -33,9 +35,9 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onBlockBreakEvent(final BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (SnowWarsPlugin.mainSnowWarsGame == null
-                || ! SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(event.getPlayer())
-                || ! SnowWarsPlugin.mainSnowWarsGame.isStarted()) return;
+        if (mainSnowWarsGame == null
+                || ! mainSnowWarsGame.getPlayers().contains(event.getPlayer())
+                || ! mainSnowWarsGame.isStarted()) return;
         if (block.getType() == Material.SNOW_BLOCK) {
             int amountToDrop = random.nextInt(snowBlockBreakMaxDrops);
             if (amountToDrop == 0)
@@ -59,15 +61,15 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onPlayerQuitEvent(PlayerQuitEvent event) {
-        if (SnowWarsPlugin.mainSnowWarsGame != null && SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(event.getPlayer())) {
-            SnowWarsPlugin.mainSnowWarsGame.removePlayer(event.getPlayer());
+        if (mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer())) {
+            mainSnowWarsGame.removePlayer(event.getPlayer());
         }
     }
 
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
-        if (SnowWarsPlugin.mainSnowWarsGame != null && SnowWarsPlugin.mainSnowWarsGame.isStarted() && SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(event.getEntity())) {
-            SnowWarsPlugin.mainSnowWarsGame.playerDied(event);
+        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(event.getEntity())) {
+            mainSnowWarsGame.playerDied(event);
         }
     }
 
@@ -77,12 +79,12 @@ public class PluginListener implements Listener {
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (Config.maxFallHeight == 0
-                || SnowWarsPlugin.mainSnowWarsGame == null
-                || ! SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(player)
-                || SnowWarsPlugin.mainSnowWarsGame.getData(player).isGhost())
+                || mainSnowWarsGame == null
+                || ! mainSnowWarsGame.getPlayers().contains(player)
+                || mainSnowWarsGame.getData(player).isGhost())
             return;
 
-        if (System.currentTimeMillis() - SnowWarsPlugin.mainSnowWarsGame.getData(player).getLastRespawnTime() > Config.respawnFreezeMillis) {
+        if (mainSnowWarsGame.isStarted() && System.currentTimeMillis() - mainSnowWarsGame.getData(player).getLastRespawnTime() < Config.respawnFreezeMillis) {
             event.setCancelled(true);
             return;
         }
@@ -111,9 +113,9 @@ public class PluginListener implements Listener {
         Player hitPlayer = (Player) event.getHitEntity();
         Vector velocity = hitPlayer.getVelocity();
         ProjectileSource source = event.getEntity().getShooter();
-        if (SnowWarsPlugin.mainSnowWarsGame != null
-                && ! SnowWarsPlugin.mainSnowWarsGame.isStarted()
-                && SnowWarsPlugin.mainSnowWarsGame.getPlayers().contains(hitPlayer)) return;
+        if (mainSnowWarsGame != null
+                && ! mainSnowWarsGame.isStarted()
+                && mainSnowWarsGame.getPlayers().contains(hitPlayer)) return;
         if (source instanceof LivingEntity) {
             velocity.add(Util.getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation()).normalize());
             hitPlayer.damage(0.5, (Entity) source);
@@ -130,12 +132,12 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
-        if (SnowWarsPlugin.mainSnowWarsGame == null) return;
+        if (mainSnowWarsGame == null) return;
         Entity damager = event.getDamager();
         Entity victim = event.getEntity();
-        Set<Player> snowWarsGamePlayers = SnowWarsPlugin.mainSnowWarsGame.getPlayers();
+        Set<Player> snowWarsGamePlayers = mainSnowWarsGame.getPlayers();
         if (damager instanceof Player
-                && ! SnowWarsPlugin.mainSnowWarsGame.isStarted()
+                && ! mainSnowWarsGame.isStarted()
                 && snowWarsGamePlayers.contains(damager)
                 && (victim.getType() == EntityType.SNOWMAN || snowWarsGamePlayers.contains(victim)))
             event.setCancelled(true);

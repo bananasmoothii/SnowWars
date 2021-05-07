@@ -50,16 +50,18 @@ public abstract class Config {
     public static int iceEventKeep;
     public static CuboidRegion snowWarsRegion;
     public static int respawnFreezeMillis;
+    public static int saturationDurationTicks;
 
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
-                noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar;
+                noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
+                notEnoughPlayers, startingIn;
 
-        public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable Player killer) {
+        public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)
                 return playerDiedBroadcast.replace("{player}", player).replace("{remaining}", remaining).replace("{lives}", lives);
-            return playerKilledBroadcast.replace("{killer}", killer.getDisplayName()).replace("{victim}", player).replace("{remaining}", remaining).replace("{lives}", lives);
+            return playerKilledBroadcast.replace("{killer}", killer).replace("{victim}", player).replace("{remaining}", remaining).replace("{lives}", lives);
         }
 
         public static String getPlayerDiedTitle(String lives) {
@@ -80,6 +82,10 @@ public abstract class Config {
 
         public static String getBossBar(String time) {
             return bossBar.replace("{time}", time);
+        }
+
+        public static String getStartingIn(String time) {
+            return startingIn.replace("{time}", time);
         }
     }
 
@@ -187,6 +193,9 @@ public abstract class Config {
 
             probableCause = "ice-event-keep";
             iceEventKeep = (int) raw.get("ice-event-keep");
+
+            probableCause = "saturation-duration";
+            saturationDurationTicks = ((int) raw.get("saturation-duration")) * 20;
 
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");

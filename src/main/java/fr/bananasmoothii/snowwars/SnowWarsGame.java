@@ -19,9 +19,14 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -147,11 +152,14 @@ public class SnowWarsGame {
         try {
             refreshMap();
         } catch (WorldEditException e) {
+            CustomLogger.warning("The map will not be copied");
             e.printStackTrace();
-            CustomLogger.warning("the map will not be copied");
         } catch (NullPointerException e) {
-            e.printStackTrace();
             CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars setsource");
+            e.printStackTrace();
+        } catch (NoSuchMethodError e) {
+            CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
+            e.printStackTrace();
         }
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             setNewRecipes();
@@ -167,6 +175,8 @@ public class SnowWarsGame {
                 data.isGhost = false;
                 data.justRespawned();
                 player.setScoreboard(scoreboard);
+                player.setFallDistance(0f);
+                player.setFireTicks(0);
                 Location loc = nextSpawnLocation();
                 player.teleport(loc);
                 players.get(player).spawnLocation = loc;
@@ -178,6 +188,9 @@ public class SnowWarsGame {
                 giveStartKit(player);
                 asyncFilterInventory(player.getInventory());
                 player.setAllowFlight(false);
+                player.playSound(Config.location, Sound.BLOCK_PORTAL_TRAVEL, 0.8f, 0.8f);
+                player.setGameMode(GameMode.ADVENTURE);
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
             }
             updateScoreBoard();
             iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
@@ -304,11 +317,22 @@ public class SnowWarsGame {
                 }
                 updateScoreBoard();
 
+                EntityDamageEvent last = playerDeathEvent.getEntity().getLastDamageCause();
+                @Nullable String killer = null;
+                if (last instanceof EntityDamageByEntityEvent) {
+                    Entity damager = ((EntityDamageByEntityEvent) last).getDamager();
+                    if (damager instanceof Player) {
+                        killer = ((Player) damager).getDisplayName();
+                    } else {
+                        killer = damager.getCustomName() == null ? damager.getName() : damager.getCustomName();
+                    }
+                }
+                String message = Messages.getPlayerDiedOrKilledBroadcast(deadPlayer.getDisplayName(),
+                        String.valueOf(remainingPLayers),
+                        String.valueOf(playerData.lives),
+                        killer);
                 for (Player playingPlayer : players.keySet()) {
-                    playingPlayer.sendMessage(Messages.getPlayerDiedOrKilledBroadcast(deadPlayer.getDisplayName(),
-                            String.valueOf(remainingPLayers),
-                            String.valueOf(playerData.lives),
-                            playerDeathEvent.getEntity().getKiller()));
+                    playingPlayer.sendMessage(message);
                 }
 
                 if (lives <= 0) {
@@ -326,6 +350,7 @@ public class SnowWarsGame {
                         deadPlayer.teleport(playerData.spawnLocation);
                         deadPlayer.setGameMode(GameMode.ADVENTURE);
                         deadPlayer.sendMessage(Messages.youResuscitated);
+                        deadPlayer.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
                         playerData.isGhost = false;
                         if (Config.giveAtRespawn) giveStartKit(deadPlayer);
                         asyncFilterInventory(deadPlayer.getInventory());

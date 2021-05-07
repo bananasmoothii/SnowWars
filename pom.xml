@@ -6,7 +6,7 @@
 
     <groupId>fr.bananasmoothii</groupId>
     <artifactId>SnowWars</artifactId>
-    <version>0.7-worldedit</version>
+    <version>0.8-worldedit</version>
     <packaging>jar</packaging>
 
     <name>SnowWars</name>
