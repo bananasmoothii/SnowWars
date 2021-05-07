@@ -13,9 +13,11 @@ with FastAsyncWorldEdit)***
 3. Set as many spawn points as there are players with `/snowwars addspawn`
 4. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
    for everyone in the current world with `*` as name
-5. Start the game with `/snowwwars start`
+5. Start the game with `/snowwwars start` or `forcestart`
 6. Optionally stop with `/snowwars stop`
 7. `/snowwars reload` might help for some bugs
+
+Players can run `/snowwars join`, `start` and `quit` without admin perms
 
 ### French messages:
 ```yaml
