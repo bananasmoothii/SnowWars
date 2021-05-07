@@ -1,5 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
+import com.boydti.fawe.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
@@ -218,7 +219,7 @@ public class SnowWarsGame {
             if (timeRemaining < 3)
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
-        try (final EditSession replaceEditSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world))) {
+        try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(Config.world)).fastmode(false).build()) {
             replaceEditSession.replaceBlocks(Config.snowWarsRegion, replaceFromBlocks, replaceToBlock);
             Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                 countDownTask.cancel();
@@ -226,7 +227,7 @@ public class SnowWarsGame {
                     player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
                 }
                 bossBar.removeAll();
-                try (EditSession undoES = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(Config.world))) {
+                try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(Config.world)).fastmode(false).build()) {
                     replaceEditSession.undo(undoES);
                 }
             }, Config.iceEventKeep * 20L);
@@ -264,9 +265,11 @@ public class SnowWarsGame {
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             Player winner = null;
-            for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
-                if (!entry.getValue().isPermanentDeath()) {
-                    winner = entry.getKey();
+            ArrayList<Player> sortedPlayers = new ArrayList<>(players.keySet());
+            sortedPlayers.sort(Comparator.comparingInt((Player p) -> players.get(p).lives));
+            for (Player player: sortedPlayers) {
+                if (!players.get(player).isPermanentDeath()) {
+                    winner = player;
                     break;
                 }
             }
@@ -279,9 +282,8 @@ public class SnowWarsGame {
             if (winner != null) {
                 final Player finalWinner = winner;
                 final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(), () -> {
-                    Location loc = finalWinner.getLocation();
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
-                            "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~ ~"
+                            "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
                                     + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
                 }, 5, 10);
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
@@ -354,6 +356,7 @@ public class SnowWarsGame {
                         playerData.isGhost = false;
                         if (Config.giveAtRespawn) giveStartKit(deadPlayer);
                         asyncFilterInventory(deadPlayer.getInventory());
+                        deadPlayer.setLastDamageCause(null);
                     }, Config.respawnDelay * 20L);
                 }
             }
@@ -493,7 +496,7 @@ public class SnowWarsGame {
         BlockVector3 srcCenter = BlockVector3.at(Config.sourceSpawn.getBlockX(), Config.sourceSpawn.getBlockY(), Config.sourceSpawn.getBlockZ());
         BlockVector3 destCenter = BlockVector3.at(Config.location.getBlockX(), Config.location.getBlockY(), Config.location.getBlockZ());
 
-        try (EditSession editSession = WorldEdit.getInstance().newEditSession(destWorld)) {
+        try (EditSession editSession = new EditSessionBuilder(destWorld).fastmode(false).build()) {
             ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(srcWorld, Config.sourceRegion, srcCenter, editSession, destCenter);
             forwardExtentCopy.setCopyingEntities(true);
             // configure here
