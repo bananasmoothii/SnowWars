@@ -40,8 +40,8 @@ public class BlockBreaker {
 
     private void checkBlock(final Block block) {
         Material type = block.getType();
-        if (boundToSolidBlock || !Config.canPlaceSnowOn.contains(type) || toBreak.contains(block) || toBreak.size() >= limit) return;
-        if (type != Material.SNOW_BLOCK && type != Material.SNOW) {
+        if (boundToSolidBlock || !Config.canPlaceSnowOn.contains(type) || toBreak.contains(block)) return;
+        if ((type != Material.SNOW_BLOCK && type != Material.SNOW) || toBreak.size() >= limit) {
             boundToSolidBlock = true;
             breakBlocksOnFinish = false;
             return;

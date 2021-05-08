@@ -124,6 +124,8 @@ public class SnowWarsGame {
                 data.isGhost = true;
                 players.put(player, data);
                 player.sendMessage(Messages.alreadyStartedSpectator);
+                player.setScoreboard(scoreboard);
+                player.setGameMode(GameMode.SPECTATOR);
             }
         }
         else {
