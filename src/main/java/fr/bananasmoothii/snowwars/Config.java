@@ -44,6 +44,8 @@ public abstract class Config {
     public static boolean clearInventory;
     public static double snowballKnockbackMultiplier;
     public static double snowballYAdd;
+    public static double snowballMaxY;
+    public static double inversedSnowballTntChance;
     public static CuboidRegion sourceRegion;
     public static Location sourceSpawn;
     public static int iceEventDelay;
@@ -56,7 +58,7 @@ public abstract class Config {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
                 noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
-                notEnoughPlayers, startingIn;
+                notEnoughPlayers, startingIn, pleaseUseJoin;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)
@@ -187,6 +189,14 @@ public abstract class Config {
 
             probableCause = "snowball-y-add";
             snowballYAdd = (double) raw.get("snowball-y-add");
+
+            probableCause = "snowball-max-y";
+            snowballMaxY = (double) raw.get("snowball-max-y");
+
+            probableCause = "snowball-tnt-chance";
+            inversedSnowballTntChance = (double) raw.get("snowball-tnt-chance");
+            assert inversedSnowballTntChance > 0 && inversedSnowballTntChance <= 1 : "snowball tnt chance must be between 0 exclusive and 1 inclusive";
+            inversedSnowballTntChance = 1 / inversedSnowballTntChance;
 
             probableCause = "ice-event-delay";
             iceEventDelay = (int) raw.get("ice-event-delay");

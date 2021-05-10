@@ -137,7 +137,9 @@ public class SnowWarsGame {
     public void removePlayer(Player player) {
         players.remove(player);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-        player.teleport(Config.location);
+        if (player.isOnline())
+            player.teleport(Config.location);
+        updateScoreBoard();
         if (started) checkForStop();
     }
 
@@ -216,6 +218,7 @@ public class SnowWarsGame {
         final BukkitTask countDownTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), () -> {
             // in seconds
             double timeRemaining = Config.iceEventKeep - (System.currentTimeMillis() - startTime) / 1000d;
+            if (timeRemaining < 0) timeRemaining = 0d;
             bossBar.setTitle(Messages.getBossBar(String.valueOf(Math.ceil(timeRemaining * 10) / 10)));
             bossBar.setProgress(timeRemaining / Config.iceEventKeep);
             if (timeRemaining < 3)

@@ -47,7 +47,7 @@ give-set-at-respawn: true
 clear-inventory: true
 # delay in seconds to freeze the player (so he can't move) at (re)spawning
 respawn-freeze: 0.6
-# duration (in seconds) of the stauration effect given at respawn
+# duration (in seconds) of the saturation effect given at respawn
 saturation-duration: 240
 
 # delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
@@ -55,9 +55,16 @@ ice-event-delay: 150
 # delay in seconds to keep the ice event
 ice-event-keep: 20
 
-snowball-knockback-multiplier: 0.4
+# the 3 below are calculated in this specific order
 # when a snowball hits a player and after the new momentum is calculated, the player will be boosted X blocks in the air
 snowball-y-add: 0.6
+# to avoid being launched into air when the shooter is below
+snowball-max-y: 1.2
+# final knockback force multiplier
+snowball-knockback-multiplier: 0.4
+# chance to summon a tnt where the snowball hits
+snowball-tnt-chance: 0.001
+
 # set via /snowwars addspawn
 spawn-locations: []
 
@@ -78,5 +85,6 @@ messages:
   livesLeft: '§aLives left:'
   bossBar: '§bIce bridges: §l{time}s§b left !'
   notEnoughPlayers: '§cNot enough players to start the game.'
-  startingIn: '§bThe game is starting in {time}s!'
+  startingIn: '§bThe game is starting in §9§l{time}s§b!'
+  pleaseUseJoin: '§cError: please use §r§n/snowwars join§c to join that world.'
 

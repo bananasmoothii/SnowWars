@@ -9,13 +9,16 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
@@ -23,6 +26,7 @@ import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static fr.bananasmoothii.snowwars.SnowWarsPlugin.mainSnowWarsGame;
 
@@ -126,8 +130,11 @@ public class PluginListener implements Listener {
         }
         velocity.normalize();
         velocity.setY(velocity.getY() + Config.snowballYAdd);
+        if (velocity.getY() > Config.snowballMaxY) velocity.setY(Config.snowballMaxY);
         velocity.multiply(Config.snowballKnockbackMultiplier);
         hitPlayer.setVelocity(velocity);
+        if (ThreadLocalRandom.current().nextInt((int)Config.inversedSnowballTntChance) == Config.inversedSnowballTntChance)
+            hitPlayer.getWorld().createExplosion(hitPlayer.getLocation(), 2.6f, false);
     }
 
     @EventHandler
@@ -141,5 +148,24 @@ public class PluginListener implements Listener {
                 && snowWarsGamePlayers.contains(damager)
                 && (victim.getType() == EntityType.SNOWMAN || snowWarsGamePlayers.contains(victim)))
             event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
+        String toName = event.getTo().getWorld().getName();
+        if (toName.equals("snowwars") && ! event.getFrom().getWorld().getName().equals(toName)
+                && (mainSnowWarsGame == null || ! mainSnowWarsGame.getPlayers().contains(event.getPlayer()))) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Config.Messages.pleaseUseJoin);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerJoinEvent(PlayerJoinEvent event) {
+        if (event.getPlayer().getWorld().getName().equals("snowwars")) {
+            if (mainSnowWarsGame == null)
+                mainSnowWarsGame = new SnowWarsGame();
+            mainSnowWarsGame.addPlayer(event.getPlayer());
+        }
     }
 }

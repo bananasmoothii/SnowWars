@@ -39,4 +39,5 @@ messages:
   bossBar: '§bPonts de glace: §l{time}s§b restantes !'
   notEnoughPlayers: '§cPas asser de joueurs pour commencer.'
   startingIn: '§bAttention, début dans {time}s !'
+  pleaseUseJoin: '§cErreur: merci d''utiliser §r§n/snowwars join§c pour rejoindre ce monde.'
 ```

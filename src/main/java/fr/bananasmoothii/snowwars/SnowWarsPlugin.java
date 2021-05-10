@@ -66,7 +66,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                         mainSnowWarsGame.addPlayer(player);
                     }
                 } else {
-                    if (sender instanceof Player && ! mainSnowWarsGame.getPlayers().contains(sender)) {
+                    if (sender instanceof Player) {
                         mainSnowWarsGame.addPlayer((Player) sender);
                     }
                     else
