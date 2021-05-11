@@ -16,8 +16,23 @@ with FastAsyncWorldEdit)***
 5. Start the game with `/snowwwars start` or `forcestart`
 6. Optionally stop with `/snowwars stop`
 7. `/snowwars reload` might help for some bugs
+8. `/snowwars addlive <player> <lives>` will add (or remove if negative) lives to that player, respawn him if
+   he can or stop the game if needed. example: `/snowwars addlive Bananasmoothii -1`
 
 Players can run `/snowwars join`, `start` and `quit` without admin perms
+
+## Permissions:
+- `snowwars.join.others`
+- `snowwars.forcestart`
+- `snowwars.stop`
+- `snowwars.setmainspawn`
+- `snowwars.addspawn`
+- `snowwars.reload`
+- `snowwars.setsource`
+- `snowwars.refreshmap`
+- `snowwars.iceevent`
+- `snowwars.addlive`
+- `snowwars.teleportotherworldwhileplaying` (allows you to be teleported to another world without quitting the game)
 
 ### French messages:
 ```yaml
@@ -41,4 +56,5 @@ messages:
   startingIn: '§bAttention, début dans §9§l{time}s§b !'
   pleaseUseJoin: '§cErreur: merci d''utiliser §r§n/snowwars join§c pour rejoindre ce monde.'
   pleaseUseQuit: '§cErreur: merci d''utiliser §r§n/snowwars quit§c pour aller dans un autre monde.'
+  defaultWinner: '§c<personne>'
 ```

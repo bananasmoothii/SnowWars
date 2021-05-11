@@ -13,6 +13,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public final class SnowWarsPlugin extends JavaPlugin {
 
     private static SnowWarsPlugin plugin;
@@ -195,6 +197,30 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 mainSnowWarsGame.iceEvent();
                 sender.sendMessage("§aTriggered ice event");
                 return true;
+            case "addlive":
+                if (hasNoPerm(sender, "snowwars.addlive")) return true;
+                if (mainSnowWarsGame == null || ! mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage("§cThis command needs the game to be started.");
+                    return false;
+                }
+                try {
+                    Player target = Objects.requireNonNull(Bukkit.getPlayer(args[1]));
+                    int lives = Integer.parseInt(args[2]);
+                    SnowWarsGame.PlayerData targetData = mainSnowWarsGame.getData(target);
+                    int newLives = targetData.getLives();
+                    targetData.setLives(newLives + lives);
+                    if (newLives <= lives && newLives > 0) { // to deal with cases where lives could be negative
+                        mainSnowWarsGame.respawnPlayer(target);
+                    } else if (newLives <= 0) {
+                        mainSnowWarsGame.checkForStop();
+                    }
+                    return true;
+                } catch (NullPointerException | IndexOutOfBoundsException e) {
+                    sender.sendMessage("§cMissing arguments: §r§n/snowwars addlive <player> <lives>");
+                } catch (NumberFormatException e) {
+                    sender.sendMessage("§cNot a valid number: " + args[2]);
+                }
+                return false;
             default:
                 return false;
         }

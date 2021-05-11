@@ -92,4 +92,5 @@ messages:
   startingIn: '§bThe game is starting in §9§l{time}s§b!'
   pleaseUseJoin: '§cError: please use §r§n/snowwars join§c to join that world.'
   pleaseUseQuit: '§cError: please use §r§n/snowwars quit§c to go in another world.'
+  defaultWinner: '§c<nobody>'
 

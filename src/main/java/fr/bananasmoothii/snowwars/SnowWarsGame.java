@@ -3,7 +3,6 @@ package fr.bananasmoothii.snowwars;
 import com.boydti.fawe.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
-import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
@@ -266,8 +265,10 @@ public class SnowWarsGame {
 
     public void stop() {
         if (! started) throw new IllegalStateException("you cannot stop a game that hasn't started");
-        iceEventTask.cancel();
-        iceEventTask = null;
+        if (iceEventTask != null) {
+            iceEventTask.cancel();
+            iceEventTask = null;
+        }
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             Player winner = null;
@@ -279,7 +280,7 @@ public class SnowWarsGame {
                     break;
                 }
             }
-            String winnerName = winner == null ? "<error>" : winner.getDisplayName();
+            String winnerName = winner == null ? Messages.defaultWinner : winner.getDisplayName();
             for (Player player: players.keySet()) {
                 player.sendTitle(Messages.getPlayerWon(winnerName), null, 20, 120, 40);
                 player.setGameMode(GameMode.ADVENTURE);
@@ -354,19 +355,24 @@ public class SnowWarsGame {
                             20, 140, 40);
 
                     Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                        playerData.justRespawned();
-                        deadPlayer.teleport(playerData.spawnLocation);
-                        deadPlayer.setGameMode(GameMode.ADVENTURE);
-                        deadPlayer.sendMessage(Messages.youResuscitated);
-                        deadPlayer.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
-                        playerData.isGhost = false;
-                        if (Config.giveAtRespawn) giveStartKit(deadPlayer);
-                        asyncFilterInventory(deadPlayer.getInventory());
-                        deadPlayer.setLastDamageCause(null);
+                        respawnPlayer(deadPlayer);
                     }, Config.respawnDelay * 20L);
                 }
             }
         }, 1);
+    }
+
+    public void respawnPlayer(Player player) {
+        PlayerData playerData = players.get(player);
+        playerData.justRespawned();
+        player.teleport(playerData.spawnLocation);
+        player.setGameMode(GameMode.ADVENTURE);
+        player.sendMessage(Messages.youResuscitated);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
+        playerData.isGhost = false;
+        if (Config.giveAtRespawn) giveStartKit(player);
+        asyncFilterInventory(player.getInventory());
+        player.setLastDamageCause(null);
     }
 
     public void checkForStop() {
