@@ -137,8 +137,9 @@ public class SnowWarsGame {
     public void removePlayer(Player player) {
         players.remove(player);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-        if (player.isOnline())
-            player.teleport(Config.location);
+        if (player.isOnline() && Config.quitCommand != null) {
+            player.performCommand(Config.quitCommand);
+        }
         updateScoreBoard();
         if (started) checkForStop();
     }

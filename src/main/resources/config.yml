@@ -24,6 +24,8 @@ lives: 3
 world: world
 # main spawn location, set via /snowwars setmainspawn, can be X Y Z or X Y Z Yaw Pitch
 location: 0 64 0
+# command to make the player execute when quitting a game. You can comment this ou to execute no command.
+quit-command: '/spawn'
 # delay in seconds before I dead player respawns
 respawn-delay: 20
 # modifies the craft of snow to make 2 of them each time
@@ -64,6 +66,8 @@ snowball-max-y: 1.2
 snowball-knockback-multiplier: 0.4
 # chance to summon a tnt where the snowball hits
 snowball-tnt-chance: 0.001
+# 4.0 is normal tnt
+snowball-tnt-power: 3.0
 
 # set via /snowwars addspawn
 spawn-locations: []
@@ -87,4 +91,5 @@ messages:
   notEnoughPlayers: '§cNot enough players to start the game.'
   startingIn: '§bThe game is starting in §9§l{time}s§b!'
   pleaseUseJoin: '§cError: please use §r§n/snowwars join§c to join that world.'
+  pleaseUseQuit: '§cError: please use §r§n/snowwars quit§c to go in another world.'
 

@@ -38,6 +38,7 @@ messages:
   livesLeft: '§aVies restantes:'
   bossBar: '§bPonts de glace: §l{time}s§b restantes !'
   notEnoughPlayers: '§cPas asser de joueurs pour commencer.'
-  startingIn: '§bAttention, début dans {time}s !'
+  startingIn: '§bAttention, début dans §9§l{time}s§b !'
   pleaseUseJoin: '§cErreur: merci d''utiliser §r§n/snowwars join§c pour rejoindre ce monde.'
+  pleaseUseQuit: '§cErreur: merci d''utiliser §r§n/snowwars quit§c pour aller dans un autre monde.'
 ```

@@ -34,6 +34,7 @@ public abstract class Config {
     public static World world;
     public static Location location;
     public static List<Location> spawnLocations;
+    public static @Nullable String quitCommand;
     public static int respawnDelay;
     public static int craftedSnowAmount;
     public static double maxFallHeight;
@@ -46,6 +47,7 @@ public abstract class Config {
     public static double snowballYAdd;
     public static double snowballMaxY;
     public static double inversedSnowballTntChance;
+    public static float snowballTntPower;
     public static CuboidRegion sourceRegion;
     public static Location sourceSpawn;
     public static int iceEventDelay;
@@ -58,7 +60,7 @@ public abstract class Config {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
                 noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
-                notEnoughPlayers, startingIn, pleaseUseJoin;
+                notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)
@@ -159,6 +161,9 @@ public abstract class Config {
                 addSpawnLocation(getLocation(world, loc), false);
             }
 
+            probableCause = "quit-command";
+            quitCommand = (String) raw.get("quit-command");
+
             probableCause = "crafted-snow-amount";
             craftedSnowAmount = (int) raw.get("crafted-snow-amount");
             PluginListener.snowBlockBreakMaxDrops = (int) Math.ceil(4.0 / craftedSnowAmount);
@@ -197,6 +202,9 @@ public abstract class Config {
             inversedSnowballTntChance = (double) raw.get("snowball-tnt-chance");
             assert inversedSnowballTntChance > 0 && inversedSnowballTntChance <= 1 : "snowball tnt chance must be between 0 exclusive and 1 inclusive";
             inversedSnowballTntChance = 1 / inversedSnowballTntChance;
+
+            probableCause = "snowball-tnt-power";
+            snowballTntPower = (float) raw.get("snowball-tnt-power");
 
             probableCause = "ice-event-delay";
             iceEventDelay = (int) raw.get("ice-event-delay");

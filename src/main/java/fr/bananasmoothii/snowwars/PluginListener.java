@@ -133,8 +133,8 @@ public class PluginListener implements Listener {
         if (velocity.getY() > Config.snowballMaxY) velocity.setY(Config.snowballMaxY);
         velocity.multiply(Config.snowballKnockbackMultiplier);
         hitPlayer.setVelocity(velocity);
-        if (ThreadLocalRandom.current().nextInt((int)Config.inversedSnowballTntChance) == Config.inversedSnowballTntChance)
-            hitPlayer.getWorld().createExplosion(hitPlayer.getLocation(), 2.6f, false);
+        if (ThreadLocalRandom.current().nextInt((int)Config.inversedSnowballTntChance) == 0)
+            hitPlayer.getWorld().createExplosion(hitPlayer.getLocation(), Config.snowballTntPower, false);
     }
 
     @EventHandler
@@ -153,10 +153,15 @@ public class PluginListener implements Listener {
     @EventHandler
     public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
         String toName = event.getTo().getWorld().getName();
-        if (toName.equals("snowwars") && ! event.getFrom().getWorld().getName().equals(toName)
-                && (mainSnowWarsGame == null || ! mainSnowWarsGame.getPlayers().contains(event.getPlayer()))) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(Config.Messages.pleaseUseJoin);
+        if (! event.getFrom().getWorld().getName().equals(toName)) {
+            if (toName.equals("snowwars") && (mainSnowWarsGame == null || !mainSnowWarsGame.getPlayers().contains(event.getPlayer()))) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Config.Messages.pleaseUseJoin);
+            } else if (!toName.equals("snowwars") && mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
+                    && ! event.getPlayer().hasPermission("snowwars.teleportotherworldwhileplaying")) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Config.Messages.pleaseUseQuit);
+            }
         }
     }
 
