@@ -32,7 +32,8 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.refreshmap`
 - `snowwars.iceevent`
 - `snowwars.addlive`
-- `snowwars.teleportotherworldwhileplaying` (allows you to be teleported to another world without quitting the game)
+- `snowwars.teleport` (allows you to be teleported to another world without quitting the game or to be teleported to the
+  "snowwars" world)
 
 ### French messages:
 ```yaml

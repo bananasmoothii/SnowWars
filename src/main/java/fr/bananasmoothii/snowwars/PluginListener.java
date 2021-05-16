@@ -162,11 +162,12 @@ public class PluginListener implements Listener {
     public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
         String toName = event.getTo().getWorld().getName();
         if (! event.getFrom().getWorld().getName().equals(toName)) {
-            if (toName.equals("snowwars") && (mainSnowWarsGame == null || !mainSnowWarsGame.getPlayers().contains(event.getPlayer()))) {
+            if (toName.equals("snowwars") && (mainSnowWarsGame == null || !mainSnowWarsGame.getPlayers().contains(event.getPlayer()))
+                    && ! event.getPlayer().hasPermission("snowwars.teleport")) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(Config.Messages.pleaseUseJoin);
             } else if (!toName.equals("snowwars") && mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
-                    && ! event.getPlayer().hasPermission("snowwars.teleportotherworldwhileplaying")) {
+                    && ! event.getPlayer().hasPermission("snowwars.teleport")) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(Config.Messages.pleaseUseQuit);
             }
