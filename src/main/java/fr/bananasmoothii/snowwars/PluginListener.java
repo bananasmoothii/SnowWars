@@ -113,7 +113,14 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onProjectileHitEvent(ProjectileHitEvent event) {
-        if (event.getEntity().getType() != EntityType.SNOWBALL || !(event.getHitEntity() instanceof Player)) return;
+        if (event.getEntity().getType() != EntityType.SNOWBALL) return;
+        // that doesn't care of velocity, if that makes an explosion then there is no velocity
+        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(event.getEntity().getShooter())
+                && ThreadLocalRandom.current().nextInt((int)Config.inversedSnowballTntChance) == 0) {
+            event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), Config.snowballTntPower, false);
+            return;
+        }
+        if (!(event.getHitEntity() instanceof Player)) return;
         Player hitPlayer = (Player) event.getHitEntity();
         Vector velocity = hitPlayer.getVelocity();
         ProjectileSource source = event.getEntity().getShooter();
@@ -121,8 +128,11 @@ public class PluginListener implements Listener {
                 && ! mainSnowWarsGame.isStarted()
                 && mainSnowWarsGame.getPlayers().contains(hitPlayer)) return;
         if (source instanceof LivingEntity) {
-            velocity.add(Util.getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation()).normalize());
-            hitPlayer.damage(0.5, (Entity) source);
+            Vector vectorFromAToB = Util.getVectorFromAToB(((LivingEntity) source).getLocation(), hitPlayer.getLocation());
+            if (vectorFromAToB.length() != 0) {
+                velocity.add(vectorFromAToB.normalize());
+                hitPlayer.damage(0.5, (Entity) source);
+            }
         } else if (source instanceof BlockProjectileSource) {
             Block blockSource = ((BlockProjectileSource) source).getBlock();
             velocity.add(Util.getVectorFromAToB(blockSource.getX(), blockSource.getY(), blockSource.getZ(), hitPlayer.getLocation()));
@@ -133,8 +143,6 @@ public class PluginListener implements Listener {
         if (velocity.getY() > Config.snowballMaxY) velocity.setY(Config.snowballMaxY);
         velocity.multiply(Config.snowballKnockbackMultiplier);
         hitPlayer.setVelocity(velocity);
-        if (ThreadLocalRandom.current().nextInt((int)Config.inversedSnowballTntChance) == 0)
-            hitPlayer.getWorld().createExplosion(hitPlayer.getLocation(), Config.snowballTntPower, false);
     }
 
     @EventHandler

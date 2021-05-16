@@ -65,7 +65,7 @@ snowball-max-y: 1.2
 # final knockback force multiplier
 snowball-knockback-multiplier: 0.4
 # chance to summon a tnt where the snowball hits
-snowball-tnt-chance: 0.001
+snowball-tnt-chance: 0.005
 # 4.0 is normal tnt
 snowball-tnt-power: 3.0
 

@@ -204,7 +204,7 @@ public abstract class Config {
             inversedSnowballTntChance = 1 / inversedSnowballTntChance;
 
             probableCause = "snowball-tnt-power";
-            snowballTntPower = (float) raw.get("snowball-tnt-power");
+            snowballTntPower = (float) (double) raw.get("snowball-tnt-power");
 
             probableCause = "ice-event-delay";
             iceEventDelay = (int) raw.get("ice-event-delay");

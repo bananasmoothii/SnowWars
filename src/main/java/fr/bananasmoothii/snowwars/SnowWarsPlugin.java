@@ -12,7 +12,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public final class SnowWarsPlugin extends JavaPlugin {
@@ -46,10 +50,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length == 0) {
+        if (args.length == 0 || !command.getName().equalsIgnoreCase("snowwars")) {
             return false;
         }
-        switch (args[0]) {
+        switch (args[0].toLowerCase()) {
             case "join":
                 if (mainSnowWarsGame == null) {
                     mainSnowWarsGame = new SnowWarsGame();
@@ -209,11 +213,13 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     SnowWarsGame.PlayerData targetData = mainSnowWarsGame.getData(target);
                     int newLives = targetData.getLives();
                     targetData.setLives(newLives + lives);
-                    if (newLives <= lives && newLives > 0) { // to deal with cases where lives could be negative
+                    mainSnowWarsGame.updateScoreBoard();
+                    if (newLives + lives > 0 && newLives <= 0) { // to deal with cases where lives could be negative
                         mainSnowWarsGame.respawnPlayer(target);
-                    } else if (newLives <= 0) {
+                    } else if (newLives + lives <= 0) {
                         mainSnowWarsGame.checkForStop();
                     }
+                    sender.sendMessage("§aGave " + args[2] + " lives to " + args[1]);
                     return true;
                 } catch (NullPointerException | IndexOutOfBoundsException e) {
                     sender.sendMessage("§cMissing arguments: §r§n/snowwars addlive <player> <lives>");
@@ -224,6 +230,44 @@ public final class SnowWarsPlugin extends JavaPlugin {
             default:
                 return false;
         }
+    }
+
+    @Nullable
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (!command.getName().equalsIgnoreCase("snowwars")) return null;
+        List<String> results = new ArrayList<>();
+        if (args.length == 1) {
+            results.add("join");
+            results.add("quit");
+            results.add("start");
+            if (sender.hasPermission("snowwars.forcestart")) results.add("forcestart");
+            if (sender.hasPermission("snowwars.stop")) results.add("stop");
+            if (sender.hasPermission("snowwars.addspawn")) results.add("addspawn");
+            if (sender.hasPermission("snowwars.setmainspawn")) results.add("setmainspawn");
+            if (sender.hasPermission("snowwars.reload")) results.add("reload");
+            if (sender.hasPermission("snowwars.setsource")) results.add("setsource");
+            if (sender.hasPermission("snowwars.iceevent")) results.add("iceevent");
+            if (sender.hasPermission("snowwars.refreshmap")) results.add("refreshmap");
+            if (sender.hasPermission("snowwars.addlive")) results.add("addlive");
+        } else if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("join") && sender.hasPermission("snowwars.join.others")) {
+                results.add("*");
+                for (Player online: Bukkit.getOnlinePlayers()) {
+                    results.add(online.getName());
+                }
+            } else if (args[0].equalsIgnoreCase("addlive") && sender.hasPermission("snowwars.addlive")
+                    && mainSnowWarsGame != null && mainSnowWarsGame.isStarted()) {
+                for (Player playing: mainSnowWarsGame.getPlayers()) {
+                    results.add(playing.getName());
+                }
+            }
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("addlive") && sender.hasPermission("snowwars.addlive")
+                && mainSnowWarsGame != null && mainSnowWarsGame.isStarted()) {
+            results.add("-1");
+            results.add("1");
+        }
+        return results;
     }
 
     public static boolean hasNoPerm(CommandSender sender, String permission) {
