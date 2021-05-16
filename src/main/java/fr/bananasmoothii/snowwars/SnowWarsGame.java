@@ -139,8 +139,10 @@ public class SnowWarsGame {
         if (player.isOnline() && Config.quitCommand != null) {
             player.performCommand(Config.quitCommand);
         }
-        updateScoreBoard();
-        if (started) checkForStop();
+        if (started) {
+            updateScoreBoard();
+            checkForStop();
+        }
     }
 
     public void addPlayer(Collection<? extends Player> playerList) {
