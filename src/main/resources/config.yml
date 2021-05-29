@@ -20,10 +20,9 @@ items-able-to-break-snow:
 
 # lives at new game for each player
 lives: 3
-# world for the main spawn location, set via /snowwars setmainspawn
-world: world
 # main spawn location, set via /snowwars setmainspawn, can be X Y Z or X Y Z Yaw Pitch
-location: 0 64 0
+main-spawn: 0 64 0
+main-spawn-world: world
 # command to make the player execute when quitting a game. You can comment this ou to execute no command.
 quit-command: '/spawn'
 # delay in seconds before I dead player respawns
@@ -64,13 +63,22 @@ snowball-y-add: 0.6
 snowball-max-y: 1.2
 # final knockback force multiplier
 snowball-knockback-multiplier: 0.4
-# chance to summon a tnt where the snowball hits
-snowball-tnt-chance: 0.005
+# chance to make the snowball explode when it hits
+snowball-tnt-chance: 0.002
 # 4.0 is normal tnt
-snowball-tnt-power: 3.0
+snowball-tnt-power: 2.5
 
-# set via /snowwars addspawn
-spawn-locations: []
+maps:
+  "example map name": # TODO: remove
+    play-spawn: 60 70 20
+    play-world: world
+    spawn: 20 70 20
+    world: world
+    min: 19 69 19
+    max: 21 71 21
+    spawns:
+      - 1 2 3
+      - 4 5 6
 
 messages:
   playerDiedBroadcast: '§c§l{player}§c died!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'
@@ -93,4 +101,6 @@ messages:
   pleaseUseJoin: '§cError: please use §r§n/snowwars join§c to join that world.'
   pleaseUseQuit: '§cError: please use §r§n/snowwars quit§c to go in another world.'
   defaultWinner: '§c<nobody>'
+  startTitle: '§b§nFIGHT !'
+  startSubtitle: '§b§lMap: §r§l{map name}'
 

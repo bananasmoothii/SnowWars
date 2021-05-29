@@ -18,6 +18,7 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -36,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SnowWarsGame {
 
@@ -46,6 +48,7 @@ public class SnowWarsGame {
     private int startLives = Config.lives;
     private Scoreboard scoreboard;
     private @Nullable BukkitTask iceEventTask;
+    private @Nullable SnowWarsMap currentMap;
 
     public static class PlayerData {
         private int lives;
@@ -113,6 +116,10 @@ public class SnowWarsGame {
         return players.get(player);
     }
 
+    public @Nullable SnowWarsMap getCurrentMap() {
+        return currentMap;
+    }
+
     public void addPlayer(Player player) {
         if (! players.containsKey(player)) {
             if (! started) {
@@ -130,7 +137,7 @@ public class SnowWarsGame {
         else {
             player.sendMessage(Messages.alreadyJoined);
         }
-        player.teleport(Config.location);
+        player.teleport(Config.mainSpawn);
     }
 
     public void removePlayer(Player player) {
@@ -155,11 +162,42 @@ public class SnowWarsGame {
         return started;
     }
 
-    public void start() {
+    public void start(final @Nullable CommandSender source) {
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            try {
+                syncStart();
+            } catch (UnableToStartException e) {
+                e.printStackTrace();
+                if (source != null)
+                    e.showFullMinecraftMessageTo(source);
+            }
+        });
+    }
+
+    public void syncStart() throws UnableToStartException {
+        if (Config.maps.size() == 0) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
+        ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
+        int totalPlayers = players.size();
+        for (SnowWarsMap map: Config.maps) {
+            if (map.getDifferentSpawns() >= totalPlayers) {
+                possibleMaps.add(map);
+            }
+        }
+        if (possibleMaps.size() == 0) {
+            currentMap = Config.maps.first();
+        } else {
+            // choose random element
+            Iterator<SnowWarsMap> iter = possibleMaps.iterator();
+            int chosenIndex = ThreadLocalRandom.current().nextInt(possibleMaps.size());
+            for (int i = 0; i < chosenIndex; i++) {
+                iter.next();
+            }
+            currentMap = iter.next();
+        }
         try {
-            refreshMap();
+            currentMap.refresh();
         } catch (WorldEditException e) {
-            CustomLogger.warning("The map will not be copied");
+            CustomLogger.severe("The map will not be copied");
             e.printStackTrace();
         } catch (NullPointerException e) {
             CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars setsource");
@@ -168,45 +206,50 @@ public class SnowWarsGame {
             CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
             e.printStackTrace();
         }
-        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
-            setNewRecipes();
-            scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-            Objective objective = scoreboard.registerNewObjective("lives-left", "dummy", Messages.livesLeft);
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            shuffledSpawns = new ArrayList<>(Config.spawnLocations);
-            Collections.shuffle(shuffledSpawns);
-            for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
-                Player player = entry.getKey();
-                PlayerData data = entry.getValue();
-                data.lives = startLives;
-                data.isGhost = false;
-                data.justRespawned();
-                player.setScoreboard(scoreboard);
-                player.setFallDistance(0f);
-                player.setFireTicks(0);
-                Location loc = nextSpawnLocation();
-                player.teleport(loc);
-                players.get(player).spawnLocation = loc;
-                player.setGameMode(GameMode.ADVENTURE);
-                if (Config.clearInventory)
-                    player.getInventory().clear();
-                player.setHealth(20);
-                player.setFoodLevel(20);
-                giveStartKit(player);
+        setNewRecipes();
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = scoreboard.registerNewObjective("lives-left", "dummy", Messages.livesLeft);
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        shuffledSpawns = new ArrayList<>(currentMap.getSpawnLocations());
+        Collections.shuffle(shuffledSpawns);
+        for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
+            Player player = entry.getKey();
+            PlayerData data = entry.getValue();
+            data.lives = startLives;
+            data.isGhost = false;
+            data.justRespawned();
+            player.setScoreboard(scoreboard);
+            player.setFallDistance(0f);
+            player.setFireTicks(0);
+            Location loc = nextSpawnLocation();
+            player.teleport(loc);
+            players.get(player).spawnLocation = loc;
+            player.setGameMode(GameMode.ADVENTURE);
+            if (Config.clearInventory)
+                player.getInventory().clear();
+            else
                 asyncFilterInventory(player.getInventory());
-                player.setAllowFlight(false);
-                player.playSound(Config.location, Sound.BLOCK_PORTAL_TRAVEL, 0.8f, 0.8f);
-                player.setGameMode(GameMode.ADVENTURE);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
-            }
-            updateScoreBoard();
-            iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
-                    Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
-            started = true;
-        });
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            giveStartKit(player);
+            player.setAllowFlight(false);
+            player.playSound(loc, Sound.BLOCK_PORTAL_TRAVEL, 0.4f, 0.8f);
+            player.setGameMode(GameMode.ADVENTURE);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
+            player.sendTitle(Messages.startTitle, Messages.getStartSubtitle(currentMap.getName()), 10, 80, 20);
+        }
+        updateScoreBoard();
+        iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
+                Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
+        started = true;
     }
 
+    /**
+     * Replaces all structure voids to ice
+     * @throws NullPointerException if currentMap is null
+     */
     public void iceEvent() {
+        if (currentMap == null) throw new NullPointerException("There is no current map");
         final long startTime = System.currentTimeMillis();
         final BossBar bossBar = Bukkit.getServer().createBossBar(
                 Messages.getBossBar(String.valueOf(Config.iceEventKeep)),
@@ -223,18 +266,19 @@ public class SnowWarsGame {
             if (timeRemaining < 0) timeRemaining = 0d;
             bossBar.setTitle(Messages.getBossBar(String.valueOf(Math.ceil(timeRemaining * 10) / 10)));
             bossBar.setProgress(timeRemaining / Config.iceEventKeep);
-            if (timeRemaining < 3)
+            if (timeRemaining < 5)
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
-        try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(Config.world)).fastmode(false).build()) {
-            replaceEditSession.replaceBlocks(Config.snowWarsRegion, replaceFromBlocks, replaceToBlock);
-            Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+        try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+            Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () ->
+                    replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock));
+            Bukkit.getScheduler().runTaskLaterAsynchronously(SnowWarsPlugin.inst(), () -> {
                 countDownTask.cancel();
                 for (Player player: getPlayers()) {
                     player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
                 }
                 bossBar.removeAll();
-                try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(Config.world)).fastmode(false).build()) {
+                try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
                     replaceEditSession.undo(undoES);
                 }
             }, Config.iceEventKeep * 20L);
@@ -301,7 +345,7 @@ public class SnowWarsGame {
                 }, 300);
             }
             for (Player player: players.keySet()) {
-                player.teleport(Config.location);
+                player.teleport(Config.mainSpawn);
                 player.setAllowFlight(false);
             }
         });
@@ -375,6 +419,7 @@ public class SnowWarsGame {
         if (Config.giveAtRespawn) giveStartKit(player);
         asyncFilterInventory(player.getInventory());
         player.setLastDamageCause(null);
+        player.playSound(playerData.spawnLocation, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 0.8f, 1f);
     }
 
     public void checkForStop() {
@@ -504,17 +549,33 @@ public class SnowWarsGame {
         return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 
-    public static void refreshMap() throws WorldEditException {
-        com.sk89q.worldedit.world.World srcWorld = BukkitAdapter.adapt(Config.sourceSpawn.getWorld());
-        com.sk89q.worldedit.world.World destWorld = BukkitAdapter.adapt(Config.location.getWorld());
-        BlockVector3 srcCenter = BlockVector3.at(Config.sourceSpawn.getBlockX(), Config.sourceSpawn.getBlockY(), Config.sourceSpawn.getBlockZ());
-        BlockVector3 destCenter = BlockVector3.at(Config.location.getBlockX(), Config.location.getBlockY(), Config.location.getBlockZ());
+    public static class UnableToStartException extends Exception {
+        private @NotNull String minecraftMessage = "§cSee console for more details";
 
-        try (EditSession editSession = new EditSessionBuilder(destWorld).fastmode(false).build()) {
-            ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(srcWorld, Config.sourceRegion, srcCenter, editSession, destCenter);
-            forwardExtentCopy.setCopyingEntities(true);
-            // configure here
-            Operations.complete(forwardExtentCopy);
+        public UnableToStartException(String message) {
+            super(message);
+            minecraftMessage = "§c" + message;
+        }
+
+        public UnableToStartException() {
+            super();
+        }
+
+        public UnableToStartException(String message, String minecraftMessage) {
+            super(message);
+            this.minecraftMessage = minecraftMessage;
+        }
+
+        public @NotNull String getFullMinecraftMessage() {
+            return "§cCould not start the game: " + minecraftMessage;
+        }
+
+        public void showFullMinecraftMessageTo(CommandSender player) {
+            player.sendMessage(getFullMinecraftMessage());
+        }
+
+        public @NotNull String getMinecraftMessage() {
+            return minecraftMessage;
         }
     }
 }

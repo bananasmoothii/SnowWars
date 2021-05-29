@@ -2,25 +2,20 @@ package fr.bananasmoothii.snowwars;
 
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings("unchecked")
 public abstract class Config {
@@ -31,9 +26,7 @@ public abstract class Config {
     public static List<Material> itemsAbleToBreakSnow;
     public static List<String> itemsAbleToBreakSnowStrings;
     public static int lives = 5;
-    public static World world;
-    public static Location location;
-    public static List<Location> spawnLocations;
+    public static Location mainSpawn;
     public static @Nullable String quitCommand;
     public static int respawnDelay;
     public static int craftedSnowAmount;
@@ -48,19 +41,18 @@ public abstract class Config {
     public static double snowballMaxY;
     public static double inversedSnowballTntChance;
     public static float snowballTntPower;
-    public static CuboidRegion sourceRegion;
-    public static Location sourceSpawn;
     public static int iceEventDelay;
     public static int iceEventKeep;
-    public static CuboidRegion snowWarsRegion;
     public static int respawnFreezeMillis;
     public static int saturationDurationTicks;
+    /** Sorted by the number of different spawn locations for each {@link SnowWarsMap}. */
+    public static TreeSet<SnowWarsMap> maps;
 
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
                 noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
-                notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit, defaultWinner;
+                notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit, defaultWinner, startTitle, startSubtitle;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)
@@ -90,6 +82,10 @@ public abstract class Config {
 
         public static String getStartingIn(String time) {
             return startingIn.replace("{time}", time);
+        }
+
+        public static String getStartSubtitle(String mapName) {
+            return startingIn.replace("{map name}", mapName);
         }
     }
 
@@ -146,20 +142,13 @@ public abstract class Config {
             probableCause = "lives";
             lives = (int) raw.get("lives");
 
-            probableCause = "world";
-            world = SnowWarsPlugin.inst().getServer().getWorld((String) raw.get("world"));
-
-            probableCause = "location";
-            location = getLocation(world, (String) raw.get("location"));
+            probableCause = "main-spawn or main-spawn-world";
+            mainSpawn = getLocation(
+                    SnowWarsPlugin.inst().getServer().getWorld((String) raw.get("main-spawn-world")),
+                    (String) raw.get("main-spawn"));
 
             probableCause = "spawn-delay";
             respawnDelay = (int) raw.get("respawn-delay");
-
-            probableCause = "spawn-locations";
-            spawnLocations = new ArrayList<>();
-            for (String loc: (List<String>) raw.get("spawn-locations")) {
-                addSpawnLocation(getLocation(world, loc), false);
-            }
 
             probableCause = "quit-command";
             quitCommand = (String) raw.get("quit-command");
@@ -224,18 +213,29 @@ public abstract class Config {
                     field.set(null, Messages.raw.get(field.getName()));
             }
 
-            probableCause = "map";
-            Map<String, String> map = (Map<String, String>) raw.get("map");
-            if (map != null) {
-                World srcWorld = Bukkit.getWorld(map.get("world"));
-                sourceRegion = new CuboidRegion(BukkitAdapter.adapt(world),
-                        Util.locationToBlockVector3(getLocation(srcWorld, map.get("min"))),
-                        Util.locationToBlockVector3(getLocation(srcWorld, map.get("max"))));
-                sourceSpawn = getLocation(srcWorld, map.get("spawn"));
+            probableCause = "maps";
+            maps = new TreeSet<>(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
+            for (Map.Entry<String, Map<String, Object>> entry: ((Map<String, Map<String, Object>>) raw.get("maps")).entrySet()) {
+                probableCause = "maps." + entry.getKey();
+                Map<String, Object> rawMap = entry.getValue();
 
-                setSnowWarsRegion();
-            } else
-                CustomLogger.warning("the source map is not defined. Please run /snowwars setsource with a selection in game before starting any game.");
+                World sourceWorld = SnowWarsPlugin.inst().getServer().getWorld((String) rawMap.get("world"));
+                if (sourceWorld == null) throw new NullPointerException("World" + rawMap.get("world") + " does not exist");
+
+                World playWorld = SnowWarsPlugin.inst().getServer().getWorld((String) rawMap.get("play-world"));
+                if (playWorld == null) throw new NullPointerException("World" + rawMap.get("play-world") + " does not exist");
+
+                List<Location> spawns = new ArrayList<>(((List<String>) rawMap.get("spawns")).size());
+                for (String stringSpawn: (List<String>) rawMap.get("spawns")) {
+                    spawns.add(getLocation(playWorld, stringSpawn));
+                }
+                maps.add(new SnowWarsMap(entry.getKey(),
+                        getLocation(sourceWorld, (String) rawMap.get("spawn")),
+                        getLocation(playWorld, (String) rawMap.get("play-spawn")),
+                        getLocation(playWorld, (String) rawMap.get("min")),
+                        getLocation(playWorld, (String) rawMap.get("max")),
+                        spawns));
+            }
 
         } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException | NullPointerException e) {
             CustomLogger.severe("Error while loading the config ! This is probably the cause : " + probableCause);
@@ -263,20 +263,11 @@ public abstract class Config {
         }
     }
 
-    public static void addSpawnLocation(Location location) {
-        addSpawnLocation(location, true);
-    }
-
-    private static void addSpawnLocation(Location location, boolean updateRaw) {
-        spawnLocations.add(location);
-        if (updateRaw) {
-            List<String> configLocations = (List<String>) raw.get("spawn-locations");
-            configLocations.clear();
-            for (Location loc: spawnLocations) {
-                configLocations.add(getStringLocation(loc));
-            }
-            refreshConfig();
-        }
+    public static void addSpawnLocation(Location location, SnowWarsMap map) {
+        map.getSpawnLocations().add(location);
+        List<String> configLocations = (List<String>) ((Map<String, Map<String, Object>>) raw.get("maps")).get(map.getName()).get("spawns");
+        configLocations.add(getStringLocation(location));
+        refreshConfig();
     }
 
     public static String getStringLocation(Location l) {
@@ -286,17 +277,36 @@ public abstract class Config {
         return l.getX() + " " + l.getY() + " " + l.getZ() + " " + l.getYaw() + " " + l.getPitch();
     }
 
+    private static String header = "# GitHub: https://github.com/bananasmoothii/SnowWars\n" +
+            "# Discord: https://discord.gg/HNHfEJXwbs\n" +
+            "# WARNING: All comments below (except this header section) will be gone after the first command that refreshes the config, if you want to find\n" +
+            "# a new config you can delete this one or head to https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml\n" +
+            "# WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...\n\n";
+
     public static void refreshConfig() {
         try {
-            yaml.dump(raw, new FileWriter("plugins/SnowWars/config.yml"));
+            FileWriter fileWriter = new FileWriter("plugins/SnowWars/config.yml");
+            fileWriter.write(header);
+            yaml.dump(raw, fileWriter);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static boolean setSource(Player player) {
+    public static @Nullable SnowWarsMap needsToSetPlaySpawn;
+
+    public static boolean addMap(final Player player, final @NotNull String name) {
+        Objects.requireNonNull(name);
+        if (needsToSetPlaySpawn != null) {
+            player.sendMessage("§cPlease set the spawn location for playing as said before with §n/snowwars completemap");
+        }
+        if (Config.maps.stream().anyMatch((SnowWarsMap map) -> map.getName().equals(name))) {
+            player.sendMessage("§cError: there is already a map with that name. If you want to override it, please first run §n/snowwars deletemap");
+            return false;
+        }
         Region source;
         try {
+            //noinspection ConstantConditions
             source = WorldEdit.getInstance().getSessionManager().findByName(player.getName()).getSelection();
         } catch (IncompleteRegionException | NullPointerException e) {
             player.sendMessage("§cUnbale to get your current selection");
@@ -306,38 +316,55 @@ public abstract class Config {
             player.sendMessage("§cYour selection is not cuboid");
             return false;
         }
-        setSource((CuboidRegion) source, player.getLocation());
-        player.sendMessage("§aSuccessfully set the source from your selection and your position and refreshed the config.");
+        needsToSetPlaySpawn = new SnowWarsMap(name, player.getLocation(), (CuboidRegion) source);
+        player.sendMessage("§aDone, now please set the spawn for playing, set via §n/snowwars completemap");
+        /*
+        addMap((CuboidRegion) source, player.getLocation(), name);
+        player.sendMessage("§aSuccessfully added a map named \"" + name + "\" from your selection and your position and refreshed the config.");
+
+         */
         return true;
     }
 
-    public static void setSource(CuboidRegion sourceRegion, Location sourceSpawn) {
-        Config.sourceRegion = sourceRegion;
-        Config.sourceSpawn = sourceSpawn;
-        HashMap<String, String> map = new HashMap<>();
-        map.put("world", sourceRegion.getWorld().getName());
-        map.put("min", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMinimumPoint(), sourceSpawn.getWorld())));
-        map.put("max", getStringLocation(Util.blockVector3ToLocation(sourceRegion.getMaximumPoint(), sourceSpawn.getWorld())));
-        map.put("spawn", getStringLocation(sourceSpawn));
-        raw.put("map", map);
-        setSnowWarsRegion();
+    public static boolean finishAddMap(Player player) {
+        if (needsToSetPlaySpawn == null) {
+            player.sendMessage("§cPlease run §n/snowwars addmap§c before.");
+            return false;
+        }
+        needsToSetPlaySpawn.setPlaySpawn(player.getLocation());
+        Config.maps.add(needsToSetPlaySpawn);
+        World playWorld = needsToSetPlaySpawn.getPlaySpawn().getWorld();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("play-spawn", getStringLocation(needsToSetPlaySpawn.getPlaySpawn()));
+        map.put("play-world", playWorld.getName());
+        map.put("spawn", getStringLocation(needsToSetPlaySpawn.getSourceSpawn()));
+        map.put("world", needsToSetPlaySpawn.getSourceSpawn().getWorld().getName());
+        map.put("min", getStringLocation(Util.blockVector3ToLocation(needsToSetPlaySpawn.getSourceRegion().getMinimumPoint(), playWorld)));
+        map.put("max", getStringLocation(Util.blockVector3ToLocation(needsToSetPlaySpawn.getSourceRegion().getMaximumPoint(), playWorld)));
+        map.put("spawns", new ArrayList<String>());
+        ((List<Map<String, Object>>) raw.get("maps")).add(map);
         refreshConfig();
+        needsToSetPlaySpawn = null;
+        player.sendMessage("Done !");
+        return true;
     }
-
+/*
     private static void setSnowWarsRegion() {
         BlockVector3 minimumPoint = sourceRegion.getMinimumPoint();
         BlockVector3 maximumPoint = sourceRegion.getMaximumPoint();
-        snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(world),
+        snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(playWorld),
                 BlockVector3.at(
-                        location.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                        location.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                        location.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                        mainSpawn.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                        mainSpawn.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                        mainSpawn.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
                 ),
                 BlockVector3.at(
-                        location.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                        location.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                        location.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
+                        mainSpawn.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
+                        mainSpawn.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
+                        mainSpawn.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
                 )
         );
     }
+
+ */
 }

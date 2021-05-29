@@ -8,9 +8,15 @@ with FastAsyncWorldEdit)***
 
 ## How to use:
 1. Set the main spawn point with `/snowwars setmainspawn`
-2. Use WorldEdit to select the region you want to copy at each game start and go to
-   the spawn point of that region, then do `/snowwars setsource`
-3. Set as many spawn points as there are players with `/snowwars addspawn`
+2. Add one or more play maps to play in:
+   1. Select your map with WorldEdit (only cuboid regions are allowed) and run `/snowwars addmap <map name>` at a
+      specific point in the map
+   2. Go to the location where you want to play with that map (can be in another world) and run `/snowwars completemap`.
+      Each time the game will start (or you run `/snowwars refreshmap`), the plugin will do as if you ran `//copy -e`
+      at the location where you ran `/snowwars addmap` and `//paste -e` at the location where you ran
+      `/snowwars completemap`. The `-e` flags means it will (try to) copy entities.
+   3. If you messed up, there is the `/snowwars deletemap <map name>` command.
+3. Set as many spawn points as there are players with `/snowwars addspawn <map name>`
 4. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
    for everyone in the current world with `*` as name
 5. Start the game with `/snowwwars start` or `forcestart`
@@ -28,7 +34,7 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.setmainspawn`
 - `snowwars.addspawn`
 - `snowwars.reload`
-- `snowwars.setsource`
+- `snowwars.addmap` (works for `/snowwars completemap` too)
 - `snowwars.refreshmap`
 - `snowwars.iceevent`
 - `snowwars.addlive`
@@ -58,4 +64,6 @@ messages:
   pleaseUseJoin: '§cErreur: merci d''utiliser §r§n/snowwars join§c pour rejoindre ce monde.'
   pleaseUseQuit: '§cErreur: merci d''utiliser §r§n/snowwars quit§c pour aller dans un autre monde.'
   defaultWinner: '§c<personne>'
+  startTitle: '§b§nFIGHT !'
+  startSubtitle: '§b§lMap: §r§l{map name}'
 ```
