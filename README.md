@@ -36,8 +36,10 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.reload`
 - `snowwars.addmap` (works for `/snowwars completemap` too)
 - `snowwars.refreshmap`
+- `snowwars.deletemap`
 - `snowwars.iceevent`
 - `snowwars.addlive`
+- `snowwars.choosemap` (allows you to specify a map in `/snowwars start` and `/snowwars forcestart`)
 - `snowwars.teleport` (allows you to be teleported to another world without quitting the game or to be teleported to the
   "snowwars" world)
 

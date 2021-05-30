@@ -45,8 +45,7 @@ public abstract class Config {
     public static int iceEventKeep;
     public static int respawnFreezeMillis;
     public static int saturationDurationTicks;
-    /** Sorted by the number of different spawn locations for each {@link SnowWarsMap}. */
-    public static TreeSet<SnowWarsMap> maps;
+    public static ArrayList<SnowWarsMap> maps;
 
     public static class Messages {
         public static Map<String, String> raw;
@@ -85,7 +84,7 @@ public abstract class Config {
         }
 
         public static String getStartSubtitle(String mapName) {
-            return startingIn.replace("{map name}", mapName);
+            return startSubtitle.replace("{map name}", mapName);
         }
     }
 
@@ -122,7 +121,7 @@ public abstract class Config {
             for (String material : (List<String>) raw.get("can-place-snow-on")) {
                 probableCause = "can-place-snow-on." + material;
                 Material givenMaterial = Material.getMaterial(material.toUpperCase());
-                if (givenMaterial == null) throw new InvalidConfigException();
+                if (givenMaterial == null) throw new InvalidConfigException(material + " doesn't exist");
                 assert givenMaterial.isSolid() : "The block " + givenMaterial.name() + " is not solid";
                 canPlaceSnowOn.add(givenMaterial);
                 canPlaceSnowOnStrings.add(material.toLowerCase());
@@ -134,7 +133,7 @@ public abstract class Config {
             for (String material : (List<String>) raw.get("items-able-to-break-snow")) {
                 probableCause = "items-able-to-break-snow." + material;
                 Material givenMaterial = Material.getMaterial(material.toUpperCase());
-                if (givenMaterial == null) throw new InvalidConfigException();
+                if (givenMaterial == null) throw new InvalidConfigException(material + " doesn't exist");
                 itemsAbleToBreakSnow.add(givenMaterial);
                 itemsAbleToBreakSnowStrings.add(material.toLowerCase());
             }
@@ -144,7 +143,7 @@ public abstract class Config {
 
             probableCause = "main-spawn or main-spawn-world";
             mainSpawn = getLocation(
-                    SnowWarsPlugin.inst().getServer().getWorld((String) raw.get("main-spawn-world")),
+                    Objects.requireNonNull(SnowWarsPlugin.inst().getServer().getWorld((String) raw.get("main-spawn-world"))),
                     (String) raw.get("main-spawn"));
 
             probableCause = "spawn-delay";
@@ -214,7 +213,7 @@ public abstract class Config {
             }
 
             probableCause = "maps";
-            maps = new TreeSet<>(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
+            maps = new ArrayList<>();
             for (Map.Entry<String, Map<String, Object>> entry: ((Map<String, Map<String, Object>>) raw.get("maps")).entrySet()) {
                 probableCause = "maps." + entry.getKey();
                 Map<String, Object> rawMap = entry.getValue();
@@ -255,9 +254,6 @@ public abstract class Config {
     }
 
     public static class InvalidConfigException extends RuntimeException {
-        public InvalidConfigException() {
-            super();
-        }
         public InvalidConfigException(String msg) {
             super(msg);
         }
@@ -277,16 +273,14 @@ public abstract class Config {
         return l.getX() + " " + l.getY() + " " + l.getZ() + " " + l.getYaw() + " " + l.getPitch();
     }
 
-    private static String header = "# GitHub: https://github.com/bananasmoothii/SnowWars\n" +
-            "# Discord: https://discord.gg/HNHfEJXwbs\n" +
-            "# WARNING: All comments below (except this header section) will be gone after the first command that refreshes the config, if you want to find\n" +
-            "# a new config you can delete this one or head to https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml\n" +
-            "# WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...\n\n";
-
     public static void refreshConfig() {
         try {
             FileWriter fileWriter = new FileWriter("plugins/SnowWars/config.yml");
-            fileWriter.write(header);
+            fileWriter.write("# GitHub: https://github.com/bananasmoothii/SnowWars\n" +
+                    "# Discord: https://discord.gg/HNHfEJXwbs\n" +
+                    "# WARNING: All comments below (except this header section) will be gone after the first command that refreshes the config, if you want to find\n" +
+                    "# a new config you can delete this one or head to https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml\n" +
+                    "# WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...\n\n");
             yaml.dump(raw, fileWriter);
         } catch (IOException e) {
             e.printStackTrace();
@@ -318,14 +312,10 @@ public abstract class Config {
         }
         needsToSetPlaySpawn = new SnowWarsMap(name, player.getLocation(), (CuboidRegion) source);
         player.sendMessage("§aDone, now please set the spawn for playing, set via §n/snowwars completemap");
-        /*
-        addMap((CuboidRegion) source, player.getLocation(), name);
-        player.sendMessage("§aSuccessfully added a map named \"" + name + "\" from your selection and your position and refreshed the config.");
-
-         */
         return true;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public static boolean finishAddMap(Player player) {
         if (needsToSetPlaySpawn == null) {
             player.sendMessage("§cPlease run §n/snowwars addmap§c before.");
@@ -342,29 +332,10 @@ public abstract class Config {
         map.put("min", getStringLocation(Util.blockVector3ToLocation(needsToSetPlaySpawn.getSourceRegion().getMinimumPoint(), playWorld)));
         map.put("max", getStringLocation(Util.blockVector3ToLocation(needsToSetPlaySpawn.getSourceRegion().getMaximumPoint(), playWorld)));
         map.put("spawns", new ArrayList<String>());
-        ((List<Map<String, Object>>) raw.get("maps")).add(map);
+        ((Map<String, Map<String, Object>>) raw.get("maps")).put(needsToSetPlaySpawn.getName(), map);
         refreshConfig();
+        player.sendMessage("§aDone. Don't forget to add spawn locations with §n/snowwars addspawn " + needsToSetPlaySpawn.getName());
         needsToSetPlaySpawn = null;
-        player.sendMessage("Done !");
         return true;
     }
-/*
-    private static void setSnowWarsRegion() {
-        BlockVector3 minimumPoint = sourceRegion.getMinimumPoint();
-        BlockVector3 maximumPoint = sourceRegion.getMaximumPoint();
-        snowWarsRegion = new CuboidRegion(BukkitAdapter.adapt(playWorld),
-                BlockVector3.at(
-                        mainSpawn.getBlockX() + (minimumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                        mainSpawn.getBlockY() + (minimumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                        mainSpawn.getBlockZ() + (minimumPoint.getBlockZ() - sourceSpawn.getBlockZ())
-                ),
-                BlockVector3.at(
-                        mainSpawn.getBlockX() + (maximumPoint.getBlockX() - sourceSpawn.getBlockX()),
-                        mainSpawn.getBlockY() + (maximumPoint.getBlockY() - sourceSpawn.getBlockY()),
-                        mainSpawn.getBlockZ() + (maximumPoint.getBlockZ() - sourceSpawn.getBlockZ())
-                )
-        );
-    }
-
- */
 }

@@ -94,6 +94,7 @@ public class PluginListener implements Listener {
         }
 
         Location to = event.getTo();
+        //noinspection ConstantConditions
         if (! to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() -1, to.getBlockZ()).getType().isSolid()) {
             if (! fallingPlayers.containsKey(player))
                 fallingPlayers.put(player, event.getTo().getY());
@@ -111,6 +112,7 @@ public class PluginListener implements Listener {
         }
     }
 
+    @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler
     public void onProjectileHitEvent(ProjectileHitEvent event) {
         if (event.getEntity().getType() != EntityType.SNOWBALL) return;
@@ -145,6 +147,7 @@ public class PluginListener implements Listener {
         hitPlayer.setVelocity(velocity);
     }
 
+    @SuppressWarnings("SuspiciousMethodCalls")
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
         if (mainSnowWarsGame == null) return;
@@ -158,6 +161,7 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @EventHandler
     public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
         String toName = event.getTo().getWorld().getName();

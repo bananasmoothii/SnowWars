@@ -22,11 +22,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("UseOfSystemOutOrSystemErr")
+@SuppressWarnings({"UseOfSystemOutOrSystemErr", "unused"})
 public class CustomLogger {
 
-    private static @Nullable Logger logger = null;
-    private static boolean logThroughInfo = false;
+    private static @Nullable Logger logger;
+    private static boolean logThroughInfo;
     private static @NotNull Level level = Level.INFO;
 
     private CustomLogger() { }

@@ -12,10 +12,6 @@ public abstract class Util {
         return new Vector(b.getX() - ax, b.getY() - ay, b.getZ() - az);
     }
 
-    public static @NotNull Vector getVectorFromAToB(double ax, double ay, double az, double bx, double by, double bz) {
-        return new Vector(bx - ax, by - ay, bz - az);
-    }
-
     public static @NotNull Vector getVectorFromAToB(Location a, Location b) {
         return new Vector(b.getX() - a.getX(), b.getY() - a.getY(), b.getZ() - a.getZ());
     }

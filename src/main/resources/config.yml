@@ -23,8 +23,8 @@ lives: 3
 # main spawn location, set via /snowwars setmainspawn, can be X Y Z or X Y Z Yaw Pitch
 main-spawn: 0 64 0
 main-spawn-world: world
-# command to make the player execute when quitting a game. You can comment this ou to execute no command.
-quit-command: '/spawn'
+# command to make the player execute when quitting a game. You can comment this out to execute no command.
+#quit-command: '/spawn'
 # delay in seconds before I dead player respawns
 respawn-delay: 20
 # modifies the craft of snow to make 2 of them each time
@@ -68,17 +68,8 @@ snowball-tnt-chance: 0.002
 # 4.0 is normal tnt
 snowball-tnt-power: 2.5
 
-maps:
-  "example map name": # TODO: remove
-    play-spawn: 60 70 20
-    play-world: world
-    spawn: 20 70 20
-    world: world
-    min: 19 69 19
-    max: 21 71 21
-    spawns:
-      - 1 2 3
-      - 4 5 6
+# Use /snowwars addmap for this
+maps: {}
 
 messages:
   playerDiedBroadcast: '§c§l{player}§c died!§e He has §l{lives}§e lives left. §6§l{remaining}§6 players remaining!'

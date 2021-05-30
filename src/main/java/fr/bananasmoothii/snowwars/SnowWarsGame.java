@@ -5,9 +5,6 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import fr.bananasmoothii.snowwars.Config.Messages;
@@ -44,7 +41,7 @@ public class SnowWarsGame {
     public static final ArrayList<SnowWarsGame> instances = new ArrayList<>();
 
     private final Map<Player, PlayerData> players = new HashMap<>();
-    private boolean started = false;
+    private boolean started;
     private int startLives = Config.lives;
     private Scoreboard scoreboard;
     private @Nullable BukkitTask iceEventTask;
@@ -53,13 +50,8 @@ public class SnowWarsGame {
     public static class PlayerData {
         private int lives;
         private Location spawnLocation;
-        private boolean isGhost = false;
+        private boolean isGhost;
         private long lastRespawnTime;
-
-        public PlayerData(int startLives, Location spawnLocation) {
-            this.lives = startLives;
-            this.spawnLocation = spawnLocation;
-        }
 
         public PlayerData(int startLives) {
             this.lives = startLives;
@@ -98,6 +90,7 @@ public class SnowWarsGame {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     public SnowWarsGame() {
         instances.add(this);
         replaceFromBlocks.add(BlockTypes.STRUCTURE_VOID.getDefaultState().toBaseBlock());
@@ -140,12 +133,10 @@ public class SnowWarsGame {
         player.teleport(Config.mainSpawn);
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void removePlayer(Player player) {
         players.remove(player);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-        if (player.isOnline() && Config.quitCommand != null) {
-            player.performCommand(Config.quitCommand);
-        }
         if (started) {
             updateScoreBoard();
             checkForStop();
@@ -162,10 +153,10 @@ public class SnowWarsGame {
         return started;
     }
 
-    public void start(final @Nullable CommandSender source) {
+    public void start(final @Nullable CommandSender source, final @Nullable String mapName) {
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             try {
-                syncStart();
+                syncStart(mapName);
             } catch (UnableToStartException e) {
                 e.printStackTrace();
                 if (source != null)
@@ -174,25 +165,40 @@ public class SnowWarsGame {
         });
     }
 
-    public void syncStart() throws UnableToStartException {
-        if (Config.maps.size() == 0) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
+    public void syncStart(@Nullable String mapName) throws UnableToStartException {
+        if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
         ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
-        int totalPlayers = players.size();
-        for (SnowWarsMap map: Config.maps) {
-            if (map.getDifferentSpawns() >= totalPlayers) {
-                possibleMaps.add(map);
+        if (mapName == null) {
+            int totalPlayers = players.size();
+            Config.maps.sort(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
+            for (SnowWarsMap map : Config.maps) {
+                if (map.getDifferentSpawns() >= totalPlayers) {
+                    possibleMaps.add(map);
+                }
             }
-        }
-        if (possibleMaps.size() == 0) {
-            currentMap = Config.maps.first();
+            if (possibleMaps.isEmpty()) {
+                if (Config.maps.isEmpty()) {
+                    throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
+                }
+                currentMap = Config.maps.get(Config.maps.size() - 1);
+                if (currentMap.getDifferentSpawns() == 0) {
+                    throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
+                }
+            } else {
+                currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size() - 1));
+            }
         } else {
-            // choose random element
-            Iterator<SnowWarsMap> iter = possibleMaps.iterator();
-            int chosenIndex = ThreadLocalRandom.current().nextInt(possibleMaps.size());
-            for (int i = 0; i < chosenIndex; i++) {
-                iter.next();
+            for (SnowWarsMap map: Config.maps) {
+                if (mapName.equals(map.getName())) {
+                    if (map.getDifferentSpawns() == 0)
+                        throw new UnableToStartException("That map has no spawn locations. Please set spawn locations with §n/snowwars addspawn");
+                    currentMap = map;
+                    break;
+                }
             }
-            currentMap = iter.next();
+            if (currentMap == null) {
+                throw new UnableToStartException("That map doesn't exist: " + mapName);
+            }
         }
         try {
             currentMap.refresh();
@@ -200,18 +206,22 @@ public class SnowWarsGame {
             CustomLogger.severe("The map will not be copied");
             e.printStackTrace();
         } catch (NullPointerException e) {
-            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars setsource");
+            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars addmap");
             e.printStackTrace();
         } catch (NoSuchMethodError e) {
             CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
             e.printStackTrace();
         }
         setNewRecipes();
+        //noinspection ConstantConditions
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective objective = scoreboard.registerNewObjective("lives-left", "dummy", Messages.livesLeft);
+        Objective objective = scoreboard.getObjective("lives-left");
+        if (objective != null) objective.unregister();
+        objective = scoreboard.registerNewObjective("lives-left", "dummy", Messages.livesLeft);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         shuffledSpawns = new ArrayList<>(currentMap.getSpawnLocations());
         Collections.shuffle(shuffledSpawns);
+        i = 0;
         for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
             Player player = entry.getKey();
             PlayerData data = entry.getValue();
@@ -221,6 +231,8 @@ public class SnowWarsGame {
             player.setScoreboard(scoreboard);
             player.setFallDistance(0f);
             player.setFireTicks(0);
+            player.setHealth(20);
+            player.setFoodLevel(20);
             Location loc = nextSpawnLocation();
             player.teleport(loc);
             players.get(player).spawnLocation = loc;
@@ -229,8 +241,6 @@ public class SnowWarsGame {
                 player.getInventory().clear();
             else
                 asyncFilterInventory(player.getInventory());
-            player.setHealth(20);
-            player.setFoodLevel(20);
             giveStartKit(player);
             player.setAllowFlight(false);
             player.playSound(loc, Sound.BLOCK_PORTAL_TRAVEL, 0.4f, 0.8f);
@@ -246,10 +256,11 @@ public class SnowWarsGame {
 
     /**
      * Replaces all structure voids to ice
-     * @throws NullPointerException if currentMap is null
+     * @throws NullPointerException if currentMap is null (the game didn't start)
      */
     public void iceEvent() {
         if (currentMap == null) throw new NullPointerException("There is no current map");
+        if (currentMap.getPlaySpawn() == null || currentMap.getPlaySpawn().getWorld() == null) throw new NullPointerException("This is not a valid map");
         final long startTime = System.currentTimeMillis();
         final BossBar bossBar = Bukkit.getServer().createBossBar(
                 Messages.getBossBar(String.valueOf(Config.iceEventKeep)),
@@ -290,15 +301,18 @@ public class SnowWarsGame {
     private final Set<BaseBlock> replaceFromBlocks = new HashSet<>();
     private final BaseBlock replaceToBlock;
 
+    @SuppressWarnings("ConstantConditions")
     public void updateScoreBoard() {
-        Objective objective = scoreboard.getObjective("lives-left");
-        for (String entry : scoreboard.getEntries()) {
-            scoreboard.resetScores(entry);
-        }
-        for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
-            Score score = objective.getScore(entry.getKey().getDisplayName());
-            score.setScore(entry.getValue().lives);
-            //entry.getKey().setScoreboard(scoreboard);
+        if (started) {
+            Objective objective = scoreboard.getObjective("lives-left");
+            for (String entry : scoreboard.getEntries()) {
+                scoreboard.resetScores(entry);
+            }
+            for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
+                Score score = objective.getScore(entry.getKey().getDisplayName());
+                score.setScore(entry.getValue().lives);
+                //entry.getKey().setScoreboard(scoreboard);
+            }
         }
     }
 
@@ -334,14 +348,14 @@ public class SnowWarsGame {
             }
             if (winner != null) {
                 final Player finalWinner = winner;
-                final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(), () -> {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
+                        () -> Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
                             "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
-                                    + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}");
-                }, 5, 10);
+                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                     Bukkit.getScheduler().cancelTask(task);
-                    scoreboard.getObjective("lives-left").unregister();
+                    Objective objective = scoreboard.getObjective("lives-left");
+                    if (objective != null) objective.unregister();
                 }, 300);
             }
             for (Player player: players.keySet()) {
@@ -400,9 +414,8 @@ public class SnowWarsGame {
                             Messages.getPlayerDiedSubtitle(String.valueOf(lives), Config.respawnDelay + "s"),
                             20, 140, 40);
 
-                    Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                        respawnPlayer(deadPlayer);
-                    }, Config.respawnDelay * 20L);
+                    Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(),
+                            () -> respawnPlayer(deadPlayer), Config.respawnDelay * 20L);
                 }
             }
         }, 1);
@@ -434,7 +447,7 @@ public class SnowWarsGame {
         if (remainingPLayers <= 1 && started) stop();
     }
 
-    private int i = 0;
+    private int i;
     private List<Location> shuffledSpawns;
     private Location nextSpawnLocation() {
         Location location = shuffledSpawns.get(i);
@@ -550,20 +563,11 @@ public class SnowWarsGame {
     }
 
     public static class UnableToStartException extends Exception {
-        private @NotNull String minecraftMessage = "§cSee console for more details";
+        private final @NotNull String minecraftMessage;
 
         public UnableToStartException(String message) {
             super(message);
             minecraftMessage = "§c" + message;
-        }
-
-        public UnableToStartException() {
-            super();
-        }
-
-        public UnableToStartException(String message, String minecraftMessage) {
-            super(message);
-            this.minecraftMessage = minecraftMessage;
         }
 
         public @NotNull String getFullMinecraftMessage() {

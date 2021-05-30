@@ -21,13 +21,14 @@ public class SnowWarsMap {
     private String name;
 
     private Location sourceSpawn;
-    private Location playSpawn;
+    private @Nullable Location playSpawn;
 
     private @NotNull CuboidRegion sourceRegion;
-    private @NotNull CuboidRegion playRegion;
+    private @Nullable CuboidRegion playRegion; // nullable if playSpawn is null
 
-    private Collection<Location> spawnLocations;
+    private final Collection<Location> spawnLocations;
 
+    @SuppressWarnings({"NullableProblems", "ConstantConditions"})
     public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, @NotNull CuboidRegion sourceRegion, Collection<Location> spawnLocations) {
         this.name = name;
         if (sourceSpawn != null && sourceSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World");
@@ -36,7 +37,8 @@ public class SnowWarsMap {
         this.playSpawn = playSpawn;
         this.sourceRegion = Objects.requireNonNull(sourceRegion);
         this.spawnLocations = spawnLocations;
-        this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn,playSpawn);
+        if (playSpawn != null)
+            this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn,playSpawn);
     }
 
     public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, Location sourceMin, Location sourceMax, Collection<Location> spawnLocations) {
@@ -50,11 +52,13 @@ public class SnowWarsMap {
     /**
      * WARNING: this constructor is only intended to use with {@link SnowWarsMap#setPlaySpawn(Location)} after
      */
+    @SuppressWarnings("ConstantConditions")
     public SnowWarsMap(String name, Location sourceSpawn, @NotNull CuboidRegion sourceRegion) {
         this(name, sourceSpawn, null, sourceRegion, new ArrayList<>());
     }
 
     public void refresh() throws WorldEditException {
+        if (playSpawn == null || playSpawn.getWorld() == null) throw new NullPointerException("Not a valid map");
         com.sk89q.worldedit.world.World srcWorld = BukkitAdapter.adapt(sourceSpawn.getWorld());
         com.sk89q.worldedit.world.World destWorld = BukkitAdapter.adapt(playSpawn.getWorld());
         BlockVector3 srcCenter = Util.locationToBlockVector3(sourceSpawn);
@@ -84,7 +88,7 @@ public class SnowWarsMap {
         this.sourceSpawn = Objects.requireNonNull(sourceSpawn);
     }
 
-    public Location getPlaySpawn() {
+    public @Nullable Location getPlaySpawn() {
         return playSpawn;
     }
 
@@ -97,6 +101,7 @@ public class SnowWarsMap {
         return sourceRegion;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void setSourceRegion(@NotNull CuboidRegion sourceRegion) {
         this.sourceRegion = Objects.requireNonNull(sourceRegion);
         playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn, playSpawn);
@@ -110,7 +115,7 @@ public class SnowWarsMap {
         return this.spawnLocations.size();
     }
 
-    public @NotNull CuboidRegion getPlayRegion() {
+    public @Nullable CuboidRegion getPlayRegion() {
         return playRegion;
     }
 

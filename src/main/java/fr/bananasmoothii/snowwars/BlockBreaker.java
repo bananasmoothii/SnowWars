@@ -14,8 +14,7 @@ public class BlockBreaker {
     private final int limit;
     private final List<Block> toBreak;
     private boolean breakBlocksOnFinish;
-    private boolean checksFinished = false;
-    private boolean boundToSolidBlock = false;
+    private boolean boundToSolidBlock;
 
     public BlockBreaker(Block initialBlock) {
         this(initialBlock, Config.snowBlockBreakLimit, true);
@@ -29,8 +28,7 @@ public class BlockBreaker {
             throw new IllegalArgumentException("not a snow block");
         scheduler.runTaskAsynchronously(inst, () -> {
             checkBlock(initialBlock);
-            checksFinished = true;
-            if (isBreakBlocksOnFinish()) breakAll();
+            if (this.breakBlocksOnFinish) breakAll();
         });
     }
 
@@ -60,19 +58,13 @@ public class BlockBreaker {
         Iterator<Block> iterator = toBreak.iterator();
         taskId = scheduler.scheduleSyncRepeatingTask(inst, () -> {
             if (iterator.hasNext()) iterator.next().breakNaturally(new ItemStack(Material.STONE_SHOVEL));
-            else scheduler.cancelTask(getTaskId());
+            else scheduler.cancelTask(taskId);
         }, 1, Config.snowBlockBreakInterval);
     }
 
     private int taskId = -1;
     public int getTaskId() {
         return taskId;
-    }
-
-    public boolean breakAllIfFinished() {
-        if (! checksFinished) return false;
-        breakAll();
-        return true;
     }
 
     public List<Block> getToBreak() {
