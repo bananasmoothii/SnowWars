@@ -239,11 +239,10 @@ public class SnowWarsGame {
             player.setGameMode(GameMode.ADVENTURE);
             if (Config.clearInventory)
                 player.getInventory().clear();
-            else
-                asyncFilterInventory(player.getInventory());
+            asyncFilterInventory(player.getInventory());
             giveStartKit(player);
             player.setAllowFlight(false);
-            player.playSound(loc, Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 0.8f);
+            player.playSound(loc, Sound.BLOCK_PORTAL_TRAVEL, 0.1f, 0.8f);
             player.setGameMode(GameMode.ADVENTURE);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
             player.sendTitle(Messages.startTitle, Messages.getStartSubtitle(currentMap.getName()), 10, 80, 20);
