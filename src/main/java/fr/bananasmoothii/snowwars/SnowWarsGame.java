@@ -185,7 +185,7 @@ public class SnowWarsGame {
                     throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
                 }
             } else {
-                currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size() - 1));
+                currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size()));
             }
         } else {
             for (SnowWarsMap map: Config.maps) {
