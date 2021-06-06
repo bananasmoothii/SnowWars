@@ -133,6 +133,8 @@ public class SnowWarsGame {
             player.sendMessage(Messages.alreadyJoined);
         }
         player.teleport(Config.mainSpawn);
+        if (Config.clearInventory)
+            player.getInventory().clear();
         if (setSpectator)
             player.setGameMode(GameMode.SPECTATOR);
     }
@@ -251,10 +253,10 @@ public class SnowWarsGame {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
             player.sendTitle(Messages.startTitle, Messages.getStartSubtitle(currentMap.getName()), 10, 80, 20);
         }
+        started = true;
         updateScoreBoard();
         iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
                 Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
-        started = true;
     }
 
     /**
@@ -377,9 +379,11 @@ public class SnowWarsGame {
         final PlayerData playerData = players.get(deadPlayer);
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
             if (players.containsKey(deadPlayer)) {
+                Location deathLocation = deadPlayer.getLocation();
                 deadPlayer.spigot().respawn();
                 playerData.isGhost = true;
                 deadPlayer.setGameMode(GameMode.SPECTATOR);
+                deadPlayer.teleport(deathLocation);
                 int lives = --players.get(deadPlayer).lives;
                 int remainingPLayers = 0;
                 for (PlayerData data : players.values()) {
