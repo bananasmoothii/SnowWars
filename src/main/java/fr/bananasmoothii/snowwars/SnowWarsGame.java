@@ -114,6 +114,7 @@ public class SnowWarsGame {
     }
 
     public void addPlayer(Player player) {
+        boolean setSpectator = false;
         if (! players.containsKey(player)) {
             if (! started) {
                 players.put(player, new PlayerData(startLives));
@@ -124,20 +125,23 @@ public class SnowWarsGame {
                 players.put(player, data);
                 player.sendMessage(Messages.alreadyStartedSpectator);
                 player.setScoreboard(scoreboard);
-                player.setGameMode(GameMode.SPECTATOR);
+                setSpectator = true;
+                updateScoreBoard();
             }
         }
         else {
             player.sendMessage(Messages.alreadyJoined);
         }
         player.teleport(Config.mainSpawn);
+        if (setSpectator)
+            player.setGameMode(GameMode.SPECTATOR);
     }
 
     @SuppressWarnings("ConstantConditions")
     public void removePlayer(Player player) {
         players.remove(player);
-        player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         if (started) {
+            player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
             updateScoreBoard();
             checkForStop();
         }
@@ -310,7 +314,6 @@ public class SnowWarsGame {
             for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
                 Score score = objective.getScore(entry.getKey().getDisplayName());
                 score.setScore(entry.getValue().lives);
-                //entry.getKey().setScoreboard(scoreboard);
             }
         }
     }
@@ -376,7 +379,6 @@ public class SnowWarsGame {
             if (players.containsKey(deadPlayer)) {
                 deadPlayer.spigot().respawn();
                 playerData.isGhost = true;
-                deadPlayer.teleport(playerData.spawnLocation);
                 deadPlayer.setGameMode(GameMode.SPECTATOR);
                 int lives = --players.get(deadPlayer).lives;
                 int remainingPLayers = 0;
@@ -443,7 +445,8 @@ public class SnowWarsGame {
     }
 
     public void checkForStop(int remainingPLayers) {
-        if (remainingPLayers <= 1 && started) stop();
+        if (remainingPLayers <= 1 && started)
+            Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), this::stop);
     }
 
     private int i;
