@@ -286,9 +286,9 @@ public class SnowWarsGame {
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
         try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
-            Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () ->
+            Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () ->
                     replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock));
-            Bukkit.getScheduler().runTaskLaterAsynchronously(SnowWarsPlugin.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                 countDownTask.cancel();
                 for (Player player: getPlayers()) {
                     player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
@@ -377,8 +377,9 @@ public class SnowWarsGame {
     public void playerDied(PlayerDeathEvent playerDeathEvent) {
         final Player deadPlayer = playerDeathEvent.getEntity();
         final PlayerData playerData = players.get(deadPlayer);
+        if (! players.containsKey(deadPlayer)) return;
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-            if (players.containsKey(deadPlayer)) {
+            if (started) {
                 Location deathLocation = deadPlayer.getLocation();
                 deadPlayer.spigot().respawn();
                 playerData.isGhost = true;
@@ -422,6 +423,9 @@ public class SnowWarsGame {
                     Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(),
                             () -> respawnPlayer(deadPlayer), Config.respawnDelay * 20L);
                 }
+            } else {
+                deadPlayer.spigot().respawn();
+                deadPlayer.teleport(Config.mainSpawn);
             }
         }, 1);
     }

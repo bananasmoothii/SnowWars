@@ -72,7 +72,7 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
-        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(event.getEntity())) {
+        if (mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getEntity())) {
             mainSnowWarsGame.playerDied(event);
         }
     }
