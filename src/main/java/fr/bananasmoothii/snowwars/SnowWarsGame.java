@@ -285,22 +285,52 @@ public class SnowWarsGame {
             if (timeRemaining < 5)
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
-        try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
-            Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () ->
-                    replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock));
+        /*
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+                replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock);
+                Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                    try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+                        replaceEditSession.undo(undoES);
+                    }
+                }, Config.iceEventKeep * 20L);
+            }
+        });
+        */
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+                replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock);
+                System.out.println("replaced " + replaceFromBlocks.iterator().next() + " to " + replaceToBlock);
+
+                Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                    countDownTask.cancel();
+                    for (Player player: getPlayers()) {
+                        player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
+                    }
+                    bossBar.removeAll();
+                    try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+                        replaceEditSession.undo(undoES);
+                        System.out.println("undid the replacement");
+                    }
+                }, Config.iceEventKeep * 20L);
+            } catch (MaxChangedBlocksException e) {
+                e.printStackTrace();
+            }
+        });
+
+        /*
+        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+            final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build();
+            replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock);
+            replaceEditSession.close();
             Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                countDownTask.cancel();
-                for (Player player: getPlayers()) {
-                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
-                }
-                bossBar.removeAll();
                 try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
                     replaceEditSession.undo(undoES);
                 }
             }, Config.iceEventKeep * 20L);
-        } catch (MaxChangedBlocksException e) {
-            e.printStackTrace();
-        }
+        });
+
+         */
     }
 
     private final Set<BaseBlock> replaceFromBlocks = new HashSet<>();
