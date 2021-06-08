@@ -3,6 +3,7 @@ package fr.bananasmoothii.snowwars;
 import com.sk89q.worldedit.WorldEditException;
 import fr.bananasmoothii.snowwars.Config.Messages;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -90,6 +91,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 }
                 mainSnowWarsGame.removePlayer(player);
                 player.teleport(Config.mainSpawn);
+                player.setGameMode(GameMode.ADVENTURE);
                 if (player.isOnline() && Config.quitCommand != null) {
                     player.performCommand(Config.quitCommand);
                 }
