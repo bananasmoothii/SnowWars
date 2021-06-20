@@ -38,8 +38,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class SnowWarsGame {
 
-    public static final ArrayList<SnowWarsGame> instances = new ArrayList<>();
-
     private final Map<Player, PlayerData> players = new HashMap<>();
     private boolean started;
     private int startLives = Config.lives;
@@ -92,7 +90,6 @@ public class SnowWarsGame {
 
     @SuppressWarnings("ConstantConditions")
     public SnowWarsGame() {
-        instances.add(this);
         replaceFromBlocks.add(BlockTypes.STRUCTURE_VOID.getDefaultState().toBaseBlock());
         replaceToBlock = BlockTypes.ICE.getDefaultState().toBaseBlock();
     }

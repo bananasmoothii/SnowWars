@@ -95,6 +95,7 @@ public class SnowWarsMap {
     public void setPlaySpawn(Location playSpawn) {
         if (playSpawn == null || playSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World and don't set to null");
         this.playSpawn = Objects.requireNonNull(playSpawn);
+        this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn, playSpawn);
     }
 
     public @NotNull CuboidRegion getSourceRegion() {
