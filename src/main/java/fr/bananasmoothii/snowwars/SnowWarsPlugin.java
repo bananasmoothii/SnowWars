@@ -49,6 +49,8 @@ public final class SnowWarsPlugin extends JavaPlugin {
 
     public static @Nullable SnowWarsGame mainSnowWarsGame;
 
+    @Nullable BukkitTask startCountDownTask;
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0 || !command.getName().equalsIgnoreCase("snowwars")) {
@@ -116,14 +118,19 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     mapName = getMapNameFromArgs(args);
                 } else mapName = null;
                 final long softStartTime = System.currentTimeMillis();
-                BukkitTask countDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+                if (startCountDownTask != null) {
+                    sender.sendMessage(Messages.alreadyStarted);
+                    return true;
+                }
+                startCountDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
                     for (Player p : mainSnowWarsGame.getPlayers()) {
                         p.sendMessage(Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
                     }
                 }, 0, 20);
                 Bukkit.getScheduler().runTaskLater(this, () -> {
-                    countDownTask.cancel();
+                    startCountDownTask.cancel();
                     mainSnowWarsGame.start(sender, mapName);
+                    startCountDownTask = null;
                 }, 200);
                 return true;
             case "forcestart":
