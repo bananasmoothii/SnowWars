@@ -9,6 +9,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -209,11 +210,9 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 return true;
             case "reload":
                 if (hasNoPerm(sender, "snowwars.reload")) return true;
-                if (mainSnowWarsGame != null) {
-                    if (mainSnowWarsGame.isStarted())
-                        mainSnowWarsGame.stop();
-                    mainSnowWarsGame = null;
-                }
+                if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted())
+                    mainSnowWarsGame.stop();
+                mainSnowWarsGame = null;
                 Config.load(this::saveDefaultConfig);
                 sender.sendMessage("§aConfig reloaded.");
                 return true;
@@ -301,6 +300,37 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     sender.sendMessage("§cNot a valid number: " + args[2]);
                 }
                 return false;
+            case "setvotelocation":
+                if (hasNoPerm(sender, "snowwars.setvotelocation")) return true;
+                if (! (sender instanceof LivingEntity)) {
+                    sender.sendMessage("Only an ingame player can do that");
+                    return false;
+                }
+                String mapName4 = getMapNameFromArgs(args);
+                for (SnowWarsMap map : Config.maps) {
+                    if (map.getName().equals(mapName4)) {
+                        Location voteLocation = ((LivingEntity) sender).getLocation();
+                        map.setVoteLocation(voteLocation);
+                        //noinspection unchecked
+                        ((Map<String, Map<String, Object>>) Config.raw.get("maps")).get(map.getName())
+                                .put("vote-location", Config.getStringLocation(voteLocation));
+                        Config.refreshConfig();
+                        sender.sendMessage("§aDone, " + Config.voteDistance + " blocks around that location will make the player vote for " + mapName4);
+                        return true;
+                    }
+                }
+                sender.sendMessage("§cThat map doesn't exists");
+                return false;
+            case "stats":
+                if (mainSnowWarsGame == null || !mainSnowWarsGame.isStarted()) {
+                    sender.sendMessage(Messages.noRunningGame);
+                } else {
+                    sender.sendMessage(Messages.statsHeader);
+                    for (Map.Entry<Player, SnowWarsGame.PlayerData> entry: mainSnowWarsGame.getPlayersAndData().entrySet()) {
+                        sender.sendMessage(Messages.getStatsLine(entry.getKey().getDisplayName(), String.valueOf(entry.getValue().getLives())));
+                    }
+                }
+                return true;
             default:
                 return false;
         }
@@ -325,16 +355,18 @@ public final class SnowWarsPlugin extends JavaPlugin {
             results.add("join");
             results.add("quit");
             results.add("start");
-            if (sender.hasPermission("snowwars.forcestart"))   results.add("forcestart");
-            if (sender.hasPermission("snowwars.stop"))         results.add("stop");
-            if (sender.hasPermission("snowwars.addspawn"))     results.add("addspawn");
-            if (sender.hasPermission("snowwars.setmainspawn")) results.add("setmainspawn");
-            if (sender.hasPermission("snowwars.reload"))       results.add("reload");
-            if (sender.hasPermission("snowwars.addmap"))       {results.add("addmap"); results.add("completemap");}
-            if (sender.hasPermission("snowwars.deletemap"))    results.add("deletemap");
-            if (sender.hasPermission("snowwars.iceevent"))     results.add("iceevent");
-            if (sender.hasPermission("snowwars.refreshmap"))   results.add("refreshmap");
-            if (sender.hasPermission("snowwars.addlive"))      results.add("addlive");
+            results.add("stats");
+            if (sender.hasPermission("snowwars.forcestart"))      results.add("forcestart");
+            if (sender.hasPermission("snowwars.stop"))            results.add("stop");
+            if (sender.hasPermission("snowwars.addspawn"))        results.add("addspawn");
+            if (sender.hasPermission("snowwars.setmainspawn"))    results.add("setmainspawn");
+            if (sender.hasPermission("snowwars.reload"))          results.add("reload");
+            if (sender.hasPermission("snowwars.addmap"))          {results.add("addmap"); results.add("completemap");}
+            if (sender.hasPermission("snowwars.deletemap"))       results.add("deletemap");
+            if (sender.hasPermission("snowwars.iceevent"))        results.add("iceevent");
+            if (sender.hasPermission("snowwars.refreshmap"))      results.add("refreshmap");
+            if (sender.hasPermission("snowwars.addlive"))         results.add("addlive");
+            if (sender.hasPermission("snowwars.setvotelocation")) results.add("setvotelocation");
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("join") && sender.hasPermission("snowwars.join.others")) {
                 results.add("*");
@@ -349,6 +381,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
             } else if ((args[0].equalsIgnoreCase("addspawn") && sender.hasPermission("snowwars.addspawn"))
                     || (args[0].equalsIgnoreCase("deletemap") && sender.hasPermission("snowwars.deletemap"))
                     || (args[0].equalsIgnoreCase("start") && sender.hasPermission("snowwars.choosemap"))
+                    || (args[0].equalsIgnoreCase("setvotelocation") && sender.hasPermission("snowwars.setvotelocation"))
                     || (args[0].equalsIgnoreCase("forcestart") && sender.hasPermission("snowwars.forcestart") && sender.hasPermission("snowwars.choosemap"))) {
                 for (SnowWarsMap map: Config.maps) {
                     results.add(map.getName());

@@ -4,9 +4,11 @@ import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,13 +47,17 @@ public abstract class Config {
     public static int iceEventKeep;
     public static int respawnFreezeMillis;
     public static int saturationDurationTicks;
+    public static int voteDistance;
+    public static int spawnSafetyCheck;
+    public static Material spawnSafetyBlock;
     public static ArrayList<SnowWarsMap> maps;
 
     public static class Messages {
         public static Map<String, String> raw;
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
                 noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
-                notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit, defaultWinner, startTitle, startSubtitle;
+                notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit, defaultWinner, startTitle, startSubtitle, hasVoted,
+                notEnoughSpawnPoints, noRunningGame, statsHeader, statsLine;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)
@@ -85,6 +91,18 @@ public abstract class Config {
 
         public static String getStartSubtitle(String mapName) {
             return startSubtitle.replace("{map name}", mapName);
+        }
+
+        public static String getHasVoted(String player, String mapName) {
+            return hasVoted.replace("{player}", player).replace("{map name}",mapName);
+        }
+
+        public static String getNotEnoughSpawnPoints(String mapName, String players) {
+            return notEnoughSpawnPoints.replace("{map name}", mapName).replace("{players}", players);
+        }
+
+        public static String getStatsLine(String player, String lives) {
+            return statsLine.replace("{player}", player).replace("{lives}", lives);
         }
     }
 
@@ -203,6 +221,15 @@ public abstract class Config {
             probableCause = "saturation-duration";
             saturationDurationTicks = ((int) raw.get("saturation-duration")) * 20;
 
+            probableCause = "vote-distance";
+            voteDistance = (int) raw.get("vote-distance");
+
+            probableCause = "spawn-safety-check";
+            spawnSafetyCheck = (int) raw.get("spawn-safety-check");
+
+            probableCause = "spawn-safety-block";
+            spawnSafetyBlock = Objects.requireNonNull(Material.getMaterial((((String) raw.get("spawn-safety-block"))).toUpperCase()), "That block doesn't exist");
+
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");
 
@@ -228,12 +255,14 @@ public abstract class Config {
                 for (String stringSpawn: (List<String>) rawMap.get("spawns")) {
                     spawns.add(getLocation(playWorld, stringSpawn));
                 }
+                //noinspection ConstantConditions
                 maps.add(new SnowWarsMap(entry.getKey(),
                         getLocation(sourceWorld, (String) rawMap.get("spawn")),
                         getLocation(playWorld, (String) rawMap.get("play-spawn")),
                         getLocation(playWorld, (String) rawMap.get("min")),
                         getLocation(playWorld, (String) rawMap.get("max")),
-                        spawns));
+                        spawns,
+                        rawMap.get("vote-location") == null ? null : getLocation(mainSpawn.getWorld(), (String) rawMap.get("vote-location"))));
             }
 
         } catch (ClassCastException | InvalidConfigException | AssertionError | IllegalArgumentException | IllegalAccessException | NullPointerException e) {
@@ -273,6 +302,7 @@ public abstract class Config {
         return l.getX() + " " + l.getY() + " " + l.getZ() + " " + l.getYaw() + " " + l.getPitch();
     }
 
+    @SuppressWarnings("TypeMayBeWeakened")
     public static void refreshConfig() {
         try {
             FileWriter fileWriter = new FileWriter("plugins/SnowWars/config.yml");

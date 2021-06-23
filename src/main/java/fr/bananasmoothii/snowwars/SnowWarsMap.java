@@ -28,8 +28,10 @@ public class SnowWarsMap {
 
     private final Collection<Location> spawnLocations;
 
+    private @Nullable Location voteLocation;
+
     @SuppressWarnings({"NullableProblems", "ConstantConditions"})
-    public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, @NotNull CuboidRegion sourceRegion, Collection<Location> spawnLocations) {
+    public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, @NotNull CuboidRegion sourceRegion, Collection<Location> spawnLocations, @Nullable Location voteLocation) {
         this.name = name;
         if (sourceSpawn != null && sourceSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World");
         this.sourceSpawn = sourceSpawn;
@@ -39,14 +41,16 @@ public class SnowWarsMap {
         this.spawnLocations = spawnLocations;
         if (playSpawn != null)
             this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn,playSpawn);
+        this.voteLocation = voteLocation;
     }
 
-    public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, Location sourceMin, Location sourceMax, Collection<Location> spawnLocations) {
+    public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, Location sourceMin, Location sourceMax, Collection<Location> spawnLocations, @Nullable Location voteLocation) {
         this(name,
                 sourceSpawn,
                 playSpawn,
                 new CuboidRegion(BukkitAdapter.adapt(sourceSpawn.getWorld()), Util.locationToBlockVector3(sourceMin), Util.locationToBlockVector3(sourceMax)),
-                spawnLocations);
+                spawnLocations,
+                voteLocation);
     }
 
     /**
@@ -54,7 +58,7 @@ public class SnowWarsMap {
      */
     @SuppressWarnings("ConstantConditions")
     public SnowWarsMap(String name, Location sourceSpawn, @NotNull CuboidRegion sourceRegion) {
-        this(name, sourceSpawn, null, sourceRegion, new ArrayList<>());
+        this(name, sourceSpawn, null, sourceRegion, new ArrayList<>(), null);
     }
 
     public void refresh() throws WorldEditException {
@@ -120,6 +124,14 @@ public class SnowWarsMap {
         return playRegion;
     }
 
+    public @Nullable Location getVoteLocation() {
+        return voteLocation;
+    }
+
+    public void setVoteLocation(@Nullable Location voteLocation) {
+        this.voteLocation = voteLocation;
+    }
+
     public static @NotNull CuboidRegion calculateRegionAtNewLocation(CuboidRegion oldRegion, Location oldSourcePoint, Location newSourcePoint) {
         return new CuboidRegion(BukkitAdapter.adapt(newSourcePoint.getWorld()),
                 BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMinimumPoint().getBlockX() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMinimumPoint().getBlockY() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMinimumPoint().getBlockZ() - oldSourcePoint.getBlockZ()),
@@ -137,6 +149,13 @@ public class SnowWarsMap {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return name.hashCode();
+    }
+
+    public boolean isVoting(Location location) {
+        if (voteLocation == null) return false;
+        return Math.abs(location.getX() - voteLocation.getX()) <= Config.voteDistance
+                && Math.abs(location.getY() - voteLocation.getY()) <= Config.voteDistance
+                && Math.abs(location.getZ() - voteLocation.getZ()) <= Config.voteDistance;
     }
 }

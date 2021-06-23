@@ -6,7 +6,7 @@ It doesn't do everything alone
 **This is SnowWars WorldEdit version, so it depends on WorldEdit *(currently not working
 with FastAsyncWorldEdit)***
 
-## How to use:
+## How to use (and command description):
 1. Set the main spawn point with `/snowwars setmainspawn`
 2. Add one or more play maps to play in:
    1. Select your map with WorldEdit (only cuboid regions are allowed) and run `/snowwars addmap <map name>` at a
@@ -17,13 +17,17 @@ with FastAsyncWorldEdit)***
       `/snowwars completemap`. The `-e` flags means it will (try to) copy entities.
    3. If you messed up, there is the `/snowwars deletemap <map name>` command.
 3. Set as many spawn points as there are players with `/snowwars addspawn <map name>`
-4. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
+4. Set a vote location with `/snowwars setvotelocation <map name>`. If a player is close to a vote location (distance
+   is configurable), he will be considered as voting for that map. If at least half of players plus one voted for a
+   map, it will be the map they will play on.
+5. Ask your players to join with `/snowwars join`. You can join for them with `/snowwars join <name>`, or join
    for everyone in the current world with `*` as name
-5. Start the game with `/snowwwars start` or `forcestart`
-6. Optionally stop with `/snowwars stop`
-7. `/snowwars reload` might help for some bugs
-8. `/snowwars addlive <player> <lives>` will add (or remove if negative) lives to that player, respawn him if
+6. Start the game with `/snowwwars start` or `forcestart`
+7. Optionally stop with `/snowwars stop`
+8. `/snowwars reload` might help for some bugs
+9. `/snowwars addlive <player> <lives>` will add (or remove if negative) lives to that player, respawn him if
    he can or stop the game if needed. example: `/snowwars addlive Bananasmoothii -1`
+10. `/snowwars stats` displays stats about the currently running game.
 
 Players can run `/snowwars join`, `start` and `quit` without admin perms
 
@@ -42,6 +46,7 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.choosemap` (allows you to specify a map in `/snowwars start` and `/snowwars forcestart`)
 - `snowwars.teleport` (allows you to be teleported to another world without quitting the game or to be teleported to the
   "snowwars" world)
+- `snowwars.setvotelocation`
 
 ### French messages:
 ```yaml
@@ -68,4 +73,6 @@ messages:
   defaultWinner: '§c<personne>'
   startTitle: '§b§nFIGHT !'
   startSubtitle: '§b§lMap: §r§l{map name}'
+  hasVoted: '{player}§r a voté pour §3{map name}'
+  notEnoughSpawnPoints: '§eDésolé, §o{map name}§e n''a pas assez de points de spawn pour {players} joueurs.'
 ```

@@ -6,7 +6,7 @@
 
     <groupId>fr.bananasmoothii</groupId>
     <artifactId>SnowWars</artifactId>
-    <version>0.10-fawe</version>
+    <version>0.11-fawe</version>
     <packaging>jar</packaging>
 
     <name>SnowWars</name>

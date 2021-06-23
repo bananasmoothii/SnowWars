@@ -46,8 +46,13 @@ start-set:
 give-set-at-respawn: true
 # clear inventory on game start
 clear-inventory: true
-# delay in seconds to freeze the player (so he can't move) at (re)spawning
+# delay in seconds to freeze the player (so he can't move and jump of) at (re)spawning
 respawn-freeze: 0.6
+# spawn safety consists in setting a specific block below the player if he spawns more that X blocks in air.
+# This way, if an island blew up, the player won't die from spawning in the void. Set the value below to 0 to always put
+# a block under the player, and set it to -1 to disable that feature.
+spawn-safety-check: 1
+spawn-safety-block: chiseled_quartz_block
 # duration (in seconds) of the saturation effect given at respawn
 saturation-duration: 240
 
@@ -64,9 +69,13 @@ snowball-max-y: 1.2
 # final knockback force multiplier
 snowball-knockback-multiplier: 0.4
 # chance to make the snowball explode when it hits
-snowball-tnt-chance: 0.002
+snowball-tnt-chance: 0.0065
 # 4.0 is normal tnt
-snowball-tnt-power: 2.5
+snowball-tnt-power: 2.8
+
+# distance from a set vote location (location where a player can go to vote for a map) to count the player as voting for that map
+# distance is not calculated with pythagore but it just checks if each of the coordinates differences are below that number
+vote-distance: 3
 
 # Use /snowwars addmap for this
 maps: {}
@@ -94,4 +103,9 @@ messages:
   defaultWinner: '§c<nobody>'
   startTitle: '§b§nFIGHT !'
   startSubtitle: '§b§lMap: §r§l{map name}'
+  hasVoted: '{player}§r has voted for §3{map name}'
+  notEnoughSpawnPoints: '§eSorry, §o{map name}§e has not enough spawn points for {players} players.'
+  noRunningGame: '§eSorry, there is currently no running game.'
+  statsHeader: '§bHere''s how the Snow Wars is running:'
+  statsLine: '§9{player}§9 : §l{lives}§9 vies'
 

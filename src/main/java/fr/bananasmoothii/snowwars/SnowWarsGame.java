@@ -12,6 +12,7 @@ import net.minecraft.server.v1_16_R3.NBTTagCompound;
 import net.minecraft.server.v1_16_R3.NBTTagList;
 import net.minecraft.server.v1_16_R3.NBTTagString;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -22,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -44,6 +46,11 @@ public class SnowWarsGame {
     private Scoreboard scoreboard;
     private @Nullable BukkitTask iceEventTask;
     private @Nullable SnowWarsMap currentMap;
+    /**
+     * {@link SnowWarsGame} does not manage this, {@link PluginListener#onPlayerMoveEvent(PlayerMoveEvent)} does.
+     * SnowWarsGame just reads that map.
+     */
+    public final Map<Player, SnowWarsMap> votingPlayers = new HashMap<>();
 
     public static class PlayerData {
         private int lives;
@@ -110,6 +117,17 @@ public class SnowWarsGame {
         return currentMap;
     }
 
+    public Set<Player> getPlayers() {
+        return players.keySet();
+    }
+
+    /**
+     * @return an unmodifiable map of players and their {@link PlayerData}
+     */
+    public Map<Player, PlayerData> getPlayersAndData() {
+        return Collections.unmodifiableMap(players);
+    }
+
     public void addPlayer(Player player) {
         boolean setSpectator = false;
         if (! players.containsKey(player)) {
@@ -146,7 +164,7 @@ public class SnowWarsGame {
         }
     }
 
-    public void addPlayer(Collection<? extends Player> playerList) {
+    public void addPlayer(Iterable<? extends Player> playerList) {
         for (Player player: playerList) {
             addPlayer(player);
         }
@@ -171,27 +189,8 @@ public class SnowWarsGame {
     public void syncStart(@Nullable String mapName) throws UnableToStartException {
         if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
         ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
-        if (mapName == null) {
-            int totalPlayers = players.size();
-            Config.maps.sort(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
+        if (mapName != null) {
             for (SnowWarsMap map : Config.maps) {
-                if (map.getDifferentSpawns() >= totalPlayers) {
-                    possibleMaps.add(map);
-                }
-            }
-            if (possibleMaps.isEmpty()) {
-                if (Config.maps.isEmpty()) {
-                    throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
-                }
-                currentMap = Config.maps.get(Config.maps.size() - 1);
-                if (currentMap.getDifferentSpawns() == 0) {
-                    throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
-                }
-            } else {
-                currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size()));
-            }
-        } else {
-            for (SnowWarsMap map: Config.maps) {
                 if (mapName.equals(map.getName())) {
                     if (map.getDifferentSpawns() == 0)
                         throw new UnableToStartException("That map has no spawn locations. Please set spawn locations with §n/snowwars addspawn");
@@ -201,6 +200,51 @@ public class SnowWarsGame {
             }
             if (currentMap == null) {
                 throw new UnableToStartException("That map doesn't exist: " + mapName);
+            }
+        } else {
+            int totalPlayers = players.size();
+
+            HashMap<SnowWarsMap, Integer> mapVoting = new HashMap<>();
+            int minimumVotesToWin = totalPlayers / 2 + 1;
+            @Nullable SnowWarsMap votedMap = null;
+            for (SnowWarsMap map : votingPlayers.values()) {
+                Integer votes = mapVoting.get(map);
+                if (votes == null) votes = 1;
+                else votes++;
+                if (votes >= minimumVotesToWin) {
+                    votedMap = map;
+                    break;
+                }
+                mapVoting.put(map, votes);
+            }
+
+            if (votedMap != null && votedMap.getDifferentSpawns() >= totalPlayers) {
+                currentMap = votedMap;
+            }
+            else {
+                if (votedMap != null && votedMap.getDifferentSpawns() < totalPlayers) {
+                    for (Player player : players.keySet()) {
+                        player.sendMessage(Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
+                    }
+                }
+
+                Config.maps.sort(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
+                for (SnowWarsMap map : Config.maps) {
+                    if (map.getDifferentSpawns() >= totalPlayers) {
+                        possibleMaps.add(map);
+                    }
+                }
+                if (possibleMaps.isEmpty()) {
+                    if (Config.maps.isEmpty()) {
+                        throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
+                    }
+                    currentMap = Config.maps.get(Config.maps.size() - 1);
+                    if (currentMap.getDifferentSpawns() == 0) {
+                        throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
+                    }
+                } else {
+                    currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size()));
+                }
             }
         }
         try {
@@ -319,6 +363,7 @@ public class SnowWarsGame {
         }
     }
 
+    @SuppressWarnings("TypeMayBeWeakened")
     private static void giveStartKit(Player player) {
         for (String string: Config.startSet) {
             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
@@ -335,6 +380,7 @@ public class SnowWarsGame {
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
             Player winner = null;
+            @SuppressWarnings("TypeMayBeWeakened")
             ArrayList<Player> sortedPlayers = new ArrayList<>(players.keySet());
             sortedPlayers.sort(Comparator.comparingInt((Player p) -> players.get(p).lives));
             for (Player player: sortedPlayers) {
@@ -367,10 +413,6 @@ public class SnowWarsGame {
             }
         });
         started = false;
-    }
-
-    public Set<Player> getPlayers() {
-        return players.keySet();
     }
 
     public void playerDied(PlayerDeathEvent playerDeathEvent) {
@@ -431,7 +473,6 @@ public class SnowWarsGame {
 
     public void respawnPlayer(Player player) {
         PlayerData playerData = players.get(player);
-        playerData.justRespawned();
         player.teleport(playerData.spawnLocation);
         player.setGameMode(GameMode.ADVENTURE);
         player.sendMessage(Messages.youResuscitated);
@@ -440,7 +481,19 @@ public class SnowWarsGame {
         if (Config.giveAtRespawn) giveStartKit(player);
         asyncFilterInventory(player.getInventory());
         player.setLastDamageCause(null);
+        if (Config.spawnSafetyCheck != -1) {
+            for (int j = 1; j < Config.spawnSafetyCheck; j++) {
+                Block block = player.getWorld().getBlockAt(player.getLocation().subtract(0, j, 0));
+                if (block.getType() == Material.AIR) {
+                    if (j == Config.spawnSafetyCheck - 1) { // end of checking
+                        block.setType(Config.spawnSafetyBlock, false);
+                        break;
+                    }
+                } else break;
+            }
+        }
         player.playSound(playerData.spawnLocation, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 0.8f, 1f);
+        playerData.justRespawned();
     }
 
     public void checkForStop() {

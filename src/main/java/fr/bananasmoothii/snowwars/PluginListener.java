@@ -1,7 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -19,6 +18,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
@@ -110,6 +111,24 @@ public class PluginListener implements Listener {
         } else {
             fallingPlayers.remove(player);
         }
+
+        if (!mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(player)) {
+            for (SnowWarsMap snowWarsMap : Config.maps) {
+                if (snowWarsMap.isVoting(player.getLocation())) {
+                    // don't spam players at each movement, only when the vote changed
+                    if (!snowWarsMap.equals(mainSnowWarsGame.votingPlayers.get(player))) {
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 80, 1, false, false, false));
+                        // broadcast
+                        for (Player snowWarsPlayer : mainSnowWarsGame.getPlayers()) {
+                            snowWarsPlayer.sendMessage(Config.Messages.getHasVoted(player.getDisplayName(), snowWarsMap.getName()));
+                            snowWarsPlayer.playNote(player.getLocation(), Instrument.CHIME, new Note(18));
+                        }
+                        mainSnowWarsGame.votingPlayers.put(player, snowWarsMap);
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -179,11 +198,13 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerJoinEvent(PlayerJoinEvent event) {
-        if (event.getPlayer().getWorld().getName().equals("snowwars")) {
-            if (mainSnowWarsGame == null)
-                mainSnowWarsGame = new SnowWarsGame();
-            mainSnowWarsGame.addPlayer(event.getPlayer());
-        }
+    public void onPlayerJoinEvent(final PlayerJoinEvent event) {
+        Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+            if (event.getPlayer().getWorld().getName().equals("snowwars")) {
+                if (mainSnowWarsGame == null)
+                    mainSnowWarsGame = new SnowWarsGame();
+                mainSnowWarsGame.addPlayer(event.getPlayer());
+            }
+        }, 20L);
     }
 }
