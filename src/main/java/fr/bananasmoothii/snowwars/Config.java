@@ -4,11 +4,10 @@ import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -290,7 +289,7 @@ public abstract class Config {
 
     public static void addSpawnLocation(Location location, SnowWarsMap map) {
         map.getSpawnLocations().add(location);
-        List<String> configLocations = (List<String>) ((Map<String, Map<String, Object>>) raw.get("maps")).get(map.getName()).get("spawns");
+        @SuppressWarnings("TypeMayBeWeakened") List<String> configLocations = (List<String>) ((Map<String, Map<String, Object>>) raw.get("maps")).get(map.getName()).get("spawns");
         configLocations.add(getStringLocation(location));
         refreshConfig();
     }
@@ -319,7 +318,7 @@ public abstract class Config {
 
     public static @Nullable SnowWarsMap needsToSetPlaySpawn;
 
-    public static boolean addMap(final Player player, final @NotNull String name) {
+    public static boolean addMap(final Entity player, final @NotNull String name) {
         Objects.requireNonNull(name);
         if (needsToSetPlaySpawn != null) {
             player.sendMessage("§cPlease set the spawn location for playing as said before with §n/snowwars completemap");
@@ -346,7 +345,7 @@ public abstract class Config {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public static boolean finishAddMap(Player player) {
+    public static boolean finishAddMap(Entity player) {
         if (needsToSetPlaySpawn == null) {
             player.sendMessage("§cPlease run §n/snowwars addmap§c before.");
             return false;
@@ -354,6 +353,7 @@ public abstract class Config {
         needsToSetPlaySpawn.setPlaySpawn(player.getLocation());
         Config.maps.add(needsToSetPlaySpawn);
         World playWorld = needsToSetPlaySpawn.getPlaySpawn().getWorld();
+        @SuppressWarnings("TypeMayBeWeakened")
         HashMap<String, Object> map = new HashMap<>();
         map.put("play-spawn", getStringLocation(needsToSetPlaySpawn.getPlaySpawn()));
         map.put("play-world", playWorld.getName());

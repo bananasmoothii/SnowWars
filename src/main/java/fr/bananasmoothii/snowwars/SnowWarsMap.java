@@ -132,6 +132,7 @@ public class SnowWarsMap {
         this.voteLocation = voteLocation;
     }
 
+    @SuppressWarnings("TypeMayBeWeakened")
     public static @NotNull CuboidRegion calculateRegionAtNewLocation(CuboidRegion oldRegion, Location oldSourcePoint, Location newSourcePoint) {
         return new CuboidRegion(BukkitAdapter.adapt(newSourcePoint.getWorld()),
                 BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMinimumPoint().getBlockX() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMinimumPoint().getBlockY() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMinimumPoint().getBlockZ() - oldSourcePoint.getBlockZ()),

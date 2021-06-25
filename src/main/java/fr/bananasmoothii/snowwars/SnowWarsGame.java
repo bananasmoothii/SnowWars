@@ -249,6 +249,7 @@ public class SnowWarsGame {
         }
         votingPlayers.clear();
         try {
+            //noinspection ConstantConditions
             currentMap.refresh();
         } catch (WorldEditException e) {
             CustomLogger.severe("The map will not be copied");
