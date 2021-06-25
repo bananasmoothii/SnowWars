@@ -485,7 +485,7 @@ public class SnowWarsGame {
         asyncFilterInventory(player.getInventory());
         player.setLastDamageCause(null);
         if (Config.spawnSafetyCheck != -1) {
-            for (int j = 1; j < Config.spawnSafetyCheck; j++) {
+            for (int j = 1; j <= Config.spawnSafetyCheck; j++) {
                 Block block = player.getWorld().getBlockAt(player.getLocation().subtract(0, j, 0));
                 if (block.getType() == Material.AIR) {
                     if (j == Config.spawnSafetyCheck - 1) { // end of checking
