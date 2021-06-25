@@ -148,6 +148,7 @@ public class SnowWarsGame {
             player.sendMessage(Messages.alreadyJoined);
         }
         player.teleport(Config.mainSpawn);
+        player.setGameMode(GameMode.ADVENTURE);
         if (Config.clearInventory)
             player.getInventory().clear();
         if (setSpectator)
