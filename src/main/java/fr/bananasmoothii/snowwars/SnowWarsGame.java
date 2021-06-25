@@ -247,6 +247,7 @@ public class SnowWarsGame {
                 }
             }
         }
+        votingPlayers.clear();
         try {
             currentMap.refresh();
         } catch (WorldEditException e) {

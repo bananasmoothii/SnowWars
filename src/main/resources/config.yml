@@ -106,6 +106,6 @@ messages:
   hasVoted: '{player}§r has voted for §3{map name}'
   notEnoughSpawnPoints: '§eSorry, §o{map name}§e has not enough spawn points for {players} players.'
   noRunningGame: '§eSorry, there is currently no running game.'
-  statsHeader: '§bHere''s how the Snow Wars is running:'
-  statsLine: '§9{player}§9 : §l{lives}§9 vies'
+  statsHeader: '§b§nHere''s how the Snow Wars is running:'
+  statsLine: '§9{player}§9 : §l{lives}§9 vies'
 
