@@ -381,40 +381,38 @@ public class SnowWarsGame {
             iceEventTask = null;
         }
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), SnowWarsGame::setOldRecipes);
-        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
-            Player winner = null;
-            @SuppressWarnings("TypeMayBeWeakened")
-            ArrayList<Player> sortedPlayers = new ArrayList<>(players.keySet());
-            sortedPlayers.sort(Comparator.comparingInt((Player p) -> players.get(p).lives));
-            for (Player player: sortedPlayers) {
-                if (!players.get(player).isPermanentDeath()) {
-                    winner = player;
-                    break;
-                }
+        Player winner = null;
+        @SuppressWarnings("TypeMayBeWeakened")
+        ArrayList<Player> sortedPlayers = new ArrayList<>(players.keySet());
+        sortedPlayers.sort(Comparator.comparingInt((Player p) -> players.get(p).lives));
+        for (Player player: sortedPlayers) {
+            if (!players.get(player).isPermanentDeath()) {
+                winner = player;
+                break;
             }
-            String winnerName = winner == null ? Messages.defaultWinner : winner.getDisplayName();
-            for (Player player: players.keySet()) {
-                player.sendTitle(Messages.getPlayerWon(winnerName), null, 20, 120, 40);
-                player.setGameMode(GameMode.ADVENTURE);
-                player.setAllowFlight(true);
-            }
-            if (winner != null) {
-                final Player finalWinner = winner;
-                final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
-                        () -> Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
-                            "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
-                                + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
-                Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                    Bukkit.getScheduler().cancelTask(task);
-                    Objective objective = scoreboard.getObjective("lives-left");
-                    if (objective != null) objective.unregister();
-                }, 300);
-            }
-            for (Player player: players.keySet()) {
-                player.teleport(Config.mainSpawn);
-                player.setAllowFlight(false);
-            }
-        });
+        }
+        String winnerName = winner == null ? Messages.defaultWinner : winner.getDisplayName();
+        for (Player player: players.keySet()) {
+            player.sendTitle(Messages.getPlayerWon(winnerName), null, 20, 120, 40);
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setAllowFlight(true);
+        }
+        if (winner != null) {
+            final Player finalWinner = winner;
+            final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
+                    () -> Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                        "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
+                            + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
+            Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+                Bukkit.getScheduler().cancelTask(task);
+                Objective objective = scoreboard.getObjective("lives-left");
+                if (objective != null) objective.unregister();
+            }, 300);
+        }
+        for (Player player: players.keySet()) {
+            player.teleport(Config.mainSpawn);
+            player.setAllowFlight(false);
+        }
         started = false;
     }
 
@@ -484,16 +482,14 @@ public class SnowWarsGame {
         if (Config.giveAtRespawn) giveStartKit(player);
         asyncFilterInventory(player.getInventory());
         player.setLastDamageCause(null);
-        if (Config.spawnSafetyCheck != -1) {
-            for (int j = 1; j <= Config.spawnSafetyCheck; j++) {
-                Block block = player.getWorld().getBlockAt(player.getLocation().subtract(0, j, 0));
-                if (block.getType() == Material.AIR) {
-                    if (j == Config.spawnSafetyCheck - 1) { // end of checking
-                        block.setType(Config.spawnSafetyBlock, false);
-                        break;
-                    }
-                } else break;
-            }
+        for (int j = 1; j <= Config.spawnSafetyCheck; j++) {
+            Block block = player.getWorld().getBlockAt(player.getLocation().subtract(0, j, 0));
+            if (block.getType() == Material.AIR) {
+                if (j == Config.spawnSafetyCheck) { // end of checking
+                    block.setType(Config.spawnSafetyBlock, false);
+                    break;
+                }
+            } else break;
         }
         player.playSound(playerData.spawnLocation, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 0.8f, 1f);
         playerData.justRespawned();
