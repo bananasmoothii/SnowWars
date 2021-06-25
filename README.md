@@ -75,6 +75,7 @@ messages:
   startSubtitle: '§b§lMap: §r§l{map name}'
   hasVoted: '{player}§r a voté pour §3{map name}'
   notEnoughSpawnPoints: '§eDésolé, §o{map name}§e n''a pas assez de points de spawn pour {players} joueurs.'
+  noRunningGame: '§eDésolé, il n''y a actuellement pas de jeu en cours.'
   statsHeader: '§b§nVoici comment le jeu de Snow Wars se déroule:'
   statsLine: '§9{player}§9 : §l{lives}§9 vies'
 ```
