@@ -14,6 +14,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -24,9 +25,7 @@ import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static fr.bananasmoothii.snowwars.SnowWarsPlugin.mainSnowWarsGame;
@@ -120,7 +119,7 @@ public class PluginListener implements Listener {
                         player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 80, 1, false, false, false));
                         // broadcast
                         for (Player snowWarsPlayer : mainSnowWarsGame.getPlayers()) {
-                            snowWarsPlayer.sendMessage(Config.Messages.getHasVoted(player.getDisplayName(), snowWarsMap.getName()));
+                            SnowWarsPlugin.sendMessage(snowWarsPlayer, Config.Messages.getHasVoted(player.getDisplayName(), snowWarsMap.getName()));
                             snowWarsPlayer.playNote(player.getLocation(), Instrument.CHIME, new Note(18));
                         }
                         mainSnowWarsGame.votingPlayers.put(player, snowWarsMap);
@@ -188,11 +187,11 @@ public class PluginListener implements Listener {
             if (toName.equals("snowwars") && (mainSnowWarsGame == null || !mainSnowWarsGame.getPlayers().contains(event.getPlayer()))
                     && ! event.getPlayer().hasPermission("snowwars.teleport")) {
                 event.setCancelled(true);
-                event.getPlayer().sendMessage(Config.Messages.pleaseUseJoin);
+                SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseJoin);
             } else if (!toName.equals("snowwars") && mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
                     && ! event.getPlayer().hasPermission("snowwars.teleport")) {
                 event.setCancelled(true);
-                event.getPlayer().sendMessage(Config.Messages.pleaseUseQuit);
+                SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseQuit);
             }
         }
     }
@@ -206,5 +205,80 @@ public class PluginListener implements Listener {
                 mainSnowWarsGame.addPlayer(event.getPlayer());
             }
         }, 20L);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onProjectileLaunchEvent(ProjectileLaunchEvent event) {
+        //noinspection SuspiciousMethodCalls
+        if (event.getEntity().getType() != EntityType.SNOWBALL
+                || mainSnowWarsGame == null
+                || !mainSnowWarsGame.isStarted()
+                || !(event.getEntity().getShooter() instanceof Player)
+                || !mainSnowWarsGame.getPlayers().contains(event.getEntity().getShooter())) return;
+
+        Player player = (Player) event.getEntity().getShooter();
+        if (! playerSnowballs.containsKey(player)) {
+            playerSnowballs.put(player, new Snowballs());
+            return;
+        }
+        if (playerSnowballs.get(player).snowballThrownTooFast()) {
+            Location explosion = player.getLocation();
+            explosion.add(Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
+                          Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
+                          Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2));
+            //noinspection ConstantConditions
+            explosion.getWorld().createExplosion(explosion, Config.AntiCheat.punitionExplosionPower, true, true);
+        }
+    }
+
+    public HashMap<Player, Snowballs> playerSnowballs = new HashMap<>();
+
+    public static class Snowballs {
+        private int snowballStrike;
+        private long lastSnowball;
+
+        private long[] snowballs = new long[Config.AntiCheat.snowballCheck];
+        private int index;
+
+        /**
+         * Acts like a setter and a getter: it saves the snowball timestamp and
+         * @return {@code true} if there is a problem with the rate and the player should be punished.
+         *         If it returns true, all latest snowball timestamps are reset.
+         */
+        public boolean snowballThrownTooFast() {
+            long time = System.currentTimeMillis();
+            if (time - lastSnowball >= Config.AntiCheat.maxSnowballAge * 1000L) {
+                reset();
+                lastSnowball = time;
+                snowballStrike = 1;
+                addSnowball(time);
+                return false;
+            }
+            lastSnowball = time;
+            snowballStrike++;
+            addSnowball(time);
+            if (snowballStrike >= Config.AntiCheat.snowballCheck) {
+                if (lastSnowball - getSnowballStrikeStart() <= Config.AntiCheat.minSnowballInterval * Config.AntiCheat.snowballCheck * 1000) {
+                    reset();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void addSnowball(long time) {
+            snowballs[index++] = time;
+            if (index == snowballs.length) index = 0;
+        }
+
+        public long getSnowballStrikeStart() {
+            return snowballs[index];
+        }
+
+        public void reset() {
+            snowballStrike = 0;
+            snowballs = new long[Config.AntiCheat.snowballCheck];
+            index = 0;
+        }
     }
 }

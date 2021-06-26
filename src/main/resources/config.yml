@@ -4,6 +4,8 @@
 # a new config you can delete this one or go in https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml
 # WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...
 
+prefix: '§r[§bSnow Wars§r] '
+
 # blocks on which you can place snow in gamemode adventure
 can-place-snow-on:
   - snow_block
@@ -76,6 +78,17 @@ snowball-tnt-power: 2.8
 # distance from a set vote location (location where a player can go to vote for a map) to count the player as voting for that map
 # distance is not calculated with pythagore but it just checks if each of the coordinates differences are below that number
 vote-distance: 3
+
+anti-cheat:
+  # Calculates an average of the latest "snowball-check" snowballs that were thrown less than "max-snowball-age" ago.
+  # If that average is below "min-snowball-interval", it triggers an explosion with a power of "punition-explosion-power"
+  # at the location of the player, offset by "punition-explosion-offset", randomly multiplied by a factor of 1, -1 or 0
+  # in each direction.
+  snowball-check: 5
+  max-snowball-age: 1 # in seconds
+  min-snowball-interval: 0.25 # in seconds
+  punition-explosion-power: 1.4
+  punition-explosion-offset: 0.5 # in blocks
 
 # Use /snowwars addmap for this
 maps: {}

@@ -47,6 +47,8 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.teleport` (allows you to be teleported to another world without quitting the game or to be teleported to the
   "snowwars" world)
 - `snowwars.setvotelocation`
+- `snowwars.anticheat.bypass`
+- `snowwars.anticheat.notify` (notifies you when someone got punished for cheating)
 
 ### French messages:
 ```yaml

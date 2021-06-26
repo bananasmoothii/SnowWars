@@ -133,19 +133,19 @@ public class SnowWarsGame {
         if (! players.containsKey(player)) {
             if (! started) {
                 players.put(player, new PlayerData(startLives));
-                player.sendMessage(Messages.join);
+                SnowWarsPlugin.sendMessage(player, Messages.join);
             } else {
                 PlayerData data = new PlayerData(0);
                 data.isGhost = true;
                 players.put(player, data);
-                player.sendMessage(Messages.alreadyStartedSpectator);
+                SnowWarsPlugin.sendMessage(player, Messages.alreadyStartedSpectator);
                 player.setScoreboard(scoreboard);
                 setSpectator = true;
                 updateScoreBoard();
             }
         }
         else {
-            player.sendMessage(Messages.alreadyJoined);
+            SnowWarsPlugin.sendMessage(player, Messages.alreadyJoined);
         }
         player.teleport(Config.mainSpawn);
         player.setGameMode(GameMode.ADVENTURE);
@@ -225,7 +225,7 @@ public class SnowWarsGame {
             else {
                 if (votedMap != null && votedMap.getDifferentSpawns() < totalPlayers) {
                     for (Player player : players.keySet()) {
-                        player.sendMessage(Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
+                        SnowWarsPlugin.sendMessage(player, Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
                     }
                 }
 
@@ -449,7 +449,7 @@ public class SnowWarsGame {
                         String.valueOf(playerData.lives),
                         killer);
                 for (Player playingPlayer : players.keySet()) {
-                    playingPlayer.sendMessage(message);
+                    SnowWarsPlugin.sendMessage(playingPlayer, message);
                 }
 
                 if (lives <= 0) {
@@ -476,7 +476,7 @@ public class SnowWarsGame {
         PlayerData playerData = players.get(player);
         player.teleport(playerData.spawnLocation);
         player.setGameMode(GameMode.ADVENTURE);
-        player.sendMessage(Messages.youResuscitated);
+        SnowWarsPlugin.sendMessage(player, Messages.youResuscitated);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
         playerData.isGhost = false;
         if (Config.giveAtRespawn) giveStartKit(player);
@@ -636,7 +636,7 @@ public class SnowWarsGame {
         }
 
         public void showFullMinecraftMessageTo(CommandSender player) {
-            player.sendMessage(getFullMinecraftMessage());
+            SnowWarsPlugin.sendMessage(player, getFullMinecraftMessage());
         }
 
         public @NotNull String getMinecraftMessage() {

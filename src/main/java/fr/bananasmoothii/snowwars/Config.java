@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.DumperOptions;
@@ -22,32 +21,33 @@ import java.util.*;
 public abstract class Config {
 
     public static Map<String, Object> raw;
+    public static String prefix = "[Snow Wars] ";
     public static List<Material> canPlaceSnowOn;
     public static List<String> canPlaceSnowOnStrings;
     public static List<Material> itemsAbleToBreakSnow;
     public static List<String> itemsAbleToBreakSnowStrings;
-    public static int lives = 5;
+    public static int lives = 3;
     public static Location mainSpawn;
     public static @Nullable String quitCommand;
-    public static int respawnDelay;
-    public static int craftedSnowAmount;
-    public static double maxFallHeight;
-    public static int snowBlockBreakInterval;
-    public static int snowBlockBreakLimit;
+    public static int respawnDelay = 20;
+    public static int craftedSnowAmount = 2;
+    public static double maxFallHeight = 40d;
+    public static int snowBlockBreakInterval = 2;
+    public static int snowBlockBreakLimit = 150;
     public static List<String> startSet;
-    public static boolean giveAtRespawn;
-    public static boolean clearInventory;
-    public static double snowballKnockbackMultiplier;
-    public static double snowballYAdd;
-    public static double snowballMaxY;
-    public static double inversedSnowballTntChance;
-    public static float snowballTntPower;
-    public static int iceEventDelay;
-    public static int iceEventKeep;
-    public static int respawnFreezeMillis;
-    public static int saturationDurationTicks;
-    public static int voteDistance;
-    public static int spawnSafetyCheck;
+    public static boolean giveAtRespawn = true;
+    public static boolean clearInventory = true;
+    public static double snowballKnockbackMultiplier = 0.4;
+    public static double snowballYAdd = 0.6;
+    public static double snowballMaxY = 1.2;
+    public static double inversedSnowballTntChance = 153.846153846;
+    public static float snowballTntPower = 2.8f;
+    public static int iceEventDelay = 150;
+    public static int iceEventKeep = 20;
+    public static int respawnFreezeMillis = 600;
+    public static int saturationDurationTicks = 240;
+    public static double voteDistance = 3d;
+    public static int spawnSafetyCheck = 1;
     public static Material spawnSafetyBlock;
     public static ArrayList<SnowWarsMap> maps;
 
@@ -105,6 +105,30 @@ public abstract class Config {
         }
     }
 
+    public static class AntiCheat {
+        /** Consider using {@link #setRaw(Map)} instead */
+        public static Map<String, Object> raw;
+        public static int snowballCheck = 5, maxSnowballAge = 1;
+        public static double minSnowballInterval = 0.25, punitionExplosionOffset = 0.5;
+        public static float punitionExplosionPower = 1.4f;
+
+        public static void setRaw(Map<String, Object> raw) {
+            AntiCheat.raw = Objects.requireNonNull(raw);
+            probableCause = "anti-cheat.max-snowball-check";
+            snowballCheck = (int) raw.get("snowball-check");
+            probableCause = "anti-cheat.max-snowball-age";
+            maxSnowballAge = (int) raw.get("max-snowball-age");
+            probableCause = "anti-cheat.min-snowball-interval";
+            minSnowballInterval = (double) raw.get("min-snowball-interval");
+            probableCause = "anti-cheat.punition-explosion-power";
+            punitionExplosionPower = (float) (double) raw.get("punition-explosion-power");
+            probableCause = "anti-cheat.punition-explosion-offset";
+            punitionExplosionOffset = (double) raw.get("punition-explosion-offset");
+        }
+
+
+    }
+
     static {
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setPrettyFlow(true);
@@ -113,6 +137,7 @@ public abstract class Config {
     }
 
     protected static Yaml yaml;
+    private static String probableCause;
 
     public static void load(@Nullable Runnable createConfigRunnable) {
         InputStream inputStream;
@@ -130,8 +155,11 @@ public abstract class Config {
         }
         raw = yaml.load(inputStream);
 
-        String probableCause = "no probable cause";
+        probableCause = "no probable cause";
         try {
+            probableCause = "prefix";
+            prefix = (String) raw.get("prefix");
+
             probableCause = "can-place-snow-on";
             canPlaceSnowOn = new ArrayList<>();
             canPlaceSnowOnStrings = new ArrayList<>();
@@ -229,9 +257,11 @@ public abstract class Config {
             probableCause = "spawn-safety-block";
             spawnSafetyBlock = Objects.requireNonNull(Material.getMaterial((((String) raw.get("spawn-safety-block"))).toUpperCase()), "That block doesn't exist");
 
+            probableCause = "anti-cheat";
+            AntiCheat.setRaw((Map<String, Object>) raw.get("anti-cheat"));
+
             probableCause = "messages";
             Messages.raw = (Map<String, String>) raw.get("messages");
-
             for (Field field: Messages.class.getDeclaredFields()) {
                 probableCause = "messages." + field.getName();
                 if (field.getType().equals(String.class))
@@ -321,10 +351,10 @@ public abstract class Config {
     public static boolean addMap(final Entity player, final @NotNull String name) {
         Objects.requireNonNull(name);
         if (needsToSetPlaySpawn != null) {
-            player.sendMessage("§cPlease set the spawn location for playing as said before with §n/snowwars completemap");
+            SnowWarsPlugin.sendMessage(player, "§cPlease set the spawn location for playing as said before with §n/snowwars completemap");
         }
         if (Config.maps.stream().anyMatch((SnowWarsMap map) -> map.getName().equals(name))) {
-            player.sendMessage("§cError: there is already a map with that name. If you want to override it, please first run §n/snowwars deletemap");
+            SnowWarsPlugin.sendMessage(player, "§cError: there is already a map with that name. If you want to override it, please first run §n/snowwars deletemap");
             return false;
         }
         Region source;
@@ -332,22 +362,22 @@ public abstract class Config {
             //noinspection ConstantConditions
             source = WorldEdit.getInstance().getSessionManager().findByName(player.getName()).getSelection();
         } catch (IncompleteRegionException | NullPointerException e) {
-            player.sendMessage("§cUnbale to get your current selection");
+            SnowWarsPlugin.sendMessage(player, "§cUnbale to get your current selection");
             return false;
         }
         if (! (source instanceof CuboidRegion)) {
-            player.sendMessage("§cYour selection is not cuboid");
+            SnowWarsPlugin.sendMessage(player, "§cYour selection is not cuboid");
             return false;
         }
         needsToSetPlaySpawn = new SnowWarsMap(name, player.getLocation(), (CuboidRegion) source);
-        player.sendMessage("§aDone, now please set the spawn for playing, set via §n/snowwars completemap");
+        SnowWarsPlugin.sendMessage(player, "§aDone, now please set the spawn for playing, set via §n/snowwars completemap");
         return true;
     }
 
     @SuppressWarnings("ConstantConditions")
     public static boolean finishAddMap(Entity player) {
         if (needsToSetPlaySpawn == null) {
-            player.sendMessage("§cPlease run §n/snowwars addmap§c before.");
+            SnowWarsPlugin.sendMessage(player, "§cPlease run §n/snowwars addmap§c before.");
             return false;
         }
         needsToSetPlaySpawn.setPlaySpawn(player.getLocation());
@@ -364,7 +394,7 @@ public abstract class Config {
         map.put("spawns", new ArrayList<String>());
         ((Map<String, Map<String, Object>>) raw.get("maps")).put(needsToSetPlaySpawn.getName(), map);
         refreshConfig();
-        player.sendMessage("§aDone. Don't forget to add spawn locations with §n/snowwars addspawn " + needsToSetPlaySpawn.getName());
+        SnowWarsPlugin.sendMessage(player, "§aDone. Don't forget to add spawn locations with §n/snowwars addspawn " + needsToSetPlaySpawn.getName());
         needsToSetPlaySpawn.refresh();
         needsToSetPlaySpawn = null;
         return true;

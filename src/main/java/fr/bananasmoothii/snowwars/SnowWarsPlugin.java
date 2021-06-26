@@ -70,7 +70,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     } else {
                         Player player = Bukkit.getServer().getPlayer(args[1]);
                         if (player == null) {
-                            sender.sendMessage("§cThat player doesn't exist");
+                            SnowWarsPlugin.sendMessage(sender, "§cThat player doesn't exist");
                             return true;
                         }
                         mainSnowWarsGame.addPlayer(player);
@@ -80,17 +80,17 @@ public final class SnowWarsPlugin extends JavaPlugin {
                         mainSnowWarsGame.addPlayer((Player) sender);
                     }
                     else
-                        sender.sendMessage("You can't do that");
+                        SnowWarsPlugin.sendMessage(sender, "You can't do that");
                 }
                 return true;
             case "quit":
                 if (!(sender instanceof Player)) {
-                    sender.sendMessage("§cOnly an in-game player can do that");
+                    SnowWarsPlugin.sendMessage(sender, "§cOnly an in-game player can do that");
                     return false;
                 }
                 Player player = (Player) sender;
                 if (mainSnowWarsGame==null || !mainSnowWarsGame.getPlayers().contains(player)) {
-                    sender.sendMessage("§cYou can't do that.");
+                    SnowWarsPlugin.sendMessage(sender, "§cYou can't do that.");
                 }
                 mainSnowWarsGame.removePlayer(player);
                 player.teleport(Config.mainSpawn);
@@ -98,19 +98,19 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 if (player.isOnline() && Config.quitCommand != null) {
                     player.performCommand(Config.quitCommand);
                 }
-                sender.sendMessage(Messages.quit);
+                SnowWarsPlugin.sendMessage(sender, Messages.quit);
                 return true;
             case "start":
                 if (mainSnowWarsGame == null || mainSnowWarsGame.getPlayers().size() < 2) {
-                    sender.sendMessage(Messages.notEnoughPlayers);
+                    SnowWarsPlugin.sendMessage(sender, Messages.notEnoughPlayers);
                     return true;
                 }
                 if (mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage(Messages.alreadyStarted);
+                    SnowWarsPlugin.sendMessage(sender, Messages.alreadyStarted);
                     return true;
                 }
                 if (Config.maps.isEmpty()) {
-                    sender.sendMessage("§cYou need to add maps first via §o/snowwars addmap");
+                    SnowWarsPlugin.sendMessage(sender, "§cYou need to add maps first via §o/snowwars addmap");
                     return false;
                 }
                 final @Nullable String mapName;
@@ -120,12 +120,12 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 } else mapName = null;
                 final long softStartTime = System.currentTimeMillis();
                 if (startCountDownTask != null) {
-                    sender.sendMessage(Messages.alreadyStarted);
+                    SnowWarsPlugin.sendMessage(sender, Messages.alreadyStarted);
                     return true;
                 }
                 startCountDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
                     for (Player p : mainSnowWarsGame.getPlayers()) {
-                        p.sendMessage(Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
+                        SnowWarsPlugin.sendMessage(p, Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
                     }
                 }, 0, 20);
                 Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -137,15 +137,15 @@ public final class SnowWarsPlugin extends JavaPlugin {
             case "forcestart":
                 if (hasNoPerm(sender, "snowwars.forcestart")) return true;
                 if (mainSnowWarsGame == null) {
-                    sender.sendMessage("§cNo game to start");
+                    SnowWarsPlugin.sendMessage(sender, "§cNo game to start");
                     return false;
                 }
                 if (mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage(Messages.alreadyStarted);
+                    SnowWarsPlugin.sendMessage(sender, Messages.alreadyStarted);
                     return false;
                 }
                 if (Config.maps.isEmpty()) {
-                    sender.sendMessage("§cYou need to add maps first via §o/snowwars addmap");
+                    SnowWarsPlugin.sendMessage(sender, "§cYou need to add maps first via §o/snowwars addmap");
                     return false;
                 }
                 final @Nullable String mapName1;
@@ -154,20 +154,20 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     mapName1 = getMapNameFromArgs(args);
                 } else mapName1 = null;
                 mainSnowWarsGame.start(sender, mapName1);
-                sender.sendMessage("§aGame started.");
+                SnowWarsPlugin.sendMessage(sender, "§aGame started.");
                 return true;
             case "stop":
                 if (hasNoPerm(sender, "snowwars.stop")) return true;
                 if (mainSnowWarsGame == null) {
-                    sender.sendMessage("§cNo game to stop");
+                    SnowWarsPlugin.sendMessage(sender, "§cNo game to stop");
                     return false;
                 }
                 if (!mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage("§cThe game didn't start");
+                    SnowWarsPlugin.sendMessage(sender, "§cThe game didn't start");
                     return false;
                 }
                 mainSnowWarsGame.stop();
-                sender.sendMessage("§aGame stopped.");
+                SnowWarsPlugin.sendMessage(sender, "§aGame stopped.");
                 return true;
             case "setmainspawn":
                 if (hasNoPerm(sender, "snowwars.setmainspawn")) return true;
@@ -178,19 +178,19 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     //noinspection ConstantConditions
                     Config.raw.put("main-spawn-world", location.getWorld().getName());
                     Config.refreshConfig();
-                    sender.sendMessage("§aSet the main spawn and refreshed the config.");
+                    SnowWarsPlugin.sendMessage(sender, "§aSet the main spawn and refreshed the config.");
                     return true;
                 }
-                sender.sendMessage("§cYou are not an entity with position");
+                SnowWarsPlugin.sendMessage(sender, "§cYou are not an entity with position");
                 return false;
             case "addspawn":
                 if (hasNoPerm(sender, "snowwars.addspawn")) return true;
                 if (!(sender instanceof Entity)) {
-                    sender.sendMessage("§cYou are not an entity with position");
+                    SnowWarsPlugin.sendMessage(sender, "§cYou are not an entity with position");
                     return false;
                 }
                 if (args.length < 2) {
-                    sender.sendMessage("§cPlease specify the map name");
+                    SnowWarsPlugin.sendMessage(sender, "§cPlease specify the map name");
                     return false;
                 }
                 final String mapName2 = getMapNameFromArgs(args);
@@ -202,11 +202,11 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     }
                 }
                 if (specifiedMap == null) {
-                    sender.sendMessage("§cThat map doesn't exist: " + mapName2);
+                    SnowWarsPlugin.sendMessage(sender, "§cThat map doesn't exist: " + mapName2);
                     return false;
                 }
                 Config.addSpawnLocation(((Entity) sender).getLocation(), specifiedMap);
-                sender.sendMessage("§aAdded spawn location and refreshed the config.");
+                SnowWarsPlugin.sendMessage(sender, "§aAdded spawn location and refreshed the config.");
                 return true;
             case "reload":
                 if (hasNoPerm(sender, "snowwars.reload")) return true;
@@ -214,22 +214,22 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     mainSnowWarsGame.stop();
                 mainSnowWarsGame = null;
                 Config.load(this::saveDefaultConfig);
-                sender.sendMessage("§aConfig reloaded.");
+                SnowWarsPlugin.sendMessage(sender, "§aConfig reloaded.");
                 return true;
             case "addmap":
                 if (! (sender instanceof Player)) {
-                    sender.sendMessage("Only an ingame player can do that");
+                    SnowWarsPlugin.sendMessage(sender, "Only an ingame player can do that");
                     return false;
                 }
                 if (hasNoPerm(sender, "snowwars.addmap")) return true;
                 if (args.length < 2) {
-                    sender.sendMessage("§cNot enough arguments, please give a name for that map");
+                    SnowWarsPlugin.sendMessage(sender, "§cNot enough arguments, please give a name for that map");
                     return false;
                 }
                 return Config.addMap((Player) sender, getMapNameFromArgs(args));
             case "completemap":
                 if (! (sender instanceof Player)) {
-                    sender.sendMessage("Only an ingame player can do that");
+                    SnowWarsPlugin.sendMessage(sender, "Only an ingame player can do that");
                     return false;
                 }
                 if (hasNoPerm(sender, "snowwars.addmap")) return true;
@@ -241,43 +241,43 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     mainSnowWarsGame.getCurrentMap().refresh();
                     return true;
                 } catch (WorldEditException e) {
-                    sender.sendMessage("§cAn error occurred, see console for details");
+                    SnowWarsPlugin.sendMessage(sender, "§cAn error occurred, see console for details");
                     e.printStackTrace();
                     return false;
                 } catch (NullPointerException e) {
-                    sender.sendMessage("§cPlease start the game first");
+                    SnowWarsPlugin.sendMessage(sender, "§cPlease start the game first");
                 }
-                sender.sendMessage("§aSuccessfully refreshed the map");
+                SnowWarsPlugin.sendMessage(sender, "§aSuccessfully refreshed the map");
                 return true;
             case "deletemap":
                 if (hasNoPerm(sender, "snowwars.deletemap")) return true;
                 if (args.length < 2) {
-                    sender.sendMessage("§cPlease specify the map name");
+                    SnowWarsPlugin.sendMessage(sender, "§cPlease specify the map name");
                     return false;
                 }
                 final String mapName3 = getMapNameFromArgs(args);
                 boolean removed = Config.maps.removeIf((SnowWarsMap map) -> mapName3.equals(map.getName()));
-                if (!removed) sender.sendMessage("§eThat map doesn't exist");
+                if (!removed) SnowWarsPlugin.sendMessage(sender, "§eThat map doesn't exist");
                 else {
                     //noinspection unchecked
                     ((Map<String, Map<String, Object>>) Config.raw.get("maps")).remove(mapName3);
                     Config.refreshConfig();
-                    sender.sendMessage("§aRemoved \"" + mapName3 + "\" and refreshed the config.");
+                    SnowWarsPlugin.sendMessage(sender, "§aRemoved \"" + mapName3 + "\" and refreshed the config.");
                 }
                 return true;
             case "iceevent":
                 if (hasNoPerm(sender, "snowwars.iceevent")) return true;
                 if (mainSnowWarsGame == null || !mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage("§cNo game started");
+                    SnowWarsPlugin.sendMessage(sender, "§cNo game started");
                     return false;
                 }
                 mainSnowWarsGame.iceEvent();
-                sender.sendMessage("§aTriggered ice event");
+                SnowWarsPlugin.sendMessage(sender, "§aTriggered ice event");
                 return true;
             case "addlive":
                 if (hasNoPerm(sender, "snowwars.addlive")) return true;
                 if (mainSnowWarsGame == null || ! mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage("§cThis command needs the game to be started.");
+                    SnowWarsPlugin.sendMessage(sender, "§cThis command needs the game to be started.");
                     return false;
                 }
                 try {
@@ -292,18 +292,18 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     } else if (newLives + lives <= 0) {
                         mainSnowWarsGame.checkForStop();
                     }
-                    sender.sendMessage("§aGave " + args[2] + " lives to " + args[1]);
+                    SnowWarsPlugin.sendMessage(sender, "§aGave " + args[2] + " lives to " + args[1]);
                     return true;
                 } catch (NullPointerException | IndexOutOfBoundsException e) {
-                    sender.sendMessage("§cMissing arguments: §r§n/snowwars addlive <player> <lives>");
+                    SnowWarsPlugin.sendMessage(sender, "§cMissing arguments: §r§n/snowwars addlive <player> <lives>");
                 } catch (NumberFormatException e) {
-                    sender.sendMessage("§cNot a valid number: " + args[2]);
+                    SnowWarsPlugin.sendMessage(sender, "§cNot a valid number: " + args[2]);
                 }
                 return false;
             case "setvotelocation":
                 if (hasNoPerm(sender, "snowwars.setvotelocation")) return true;
                 if (! (sender instanceof LivingEntity)) {
-                    sender.sendMessage("Only an ingame player can do that");
+                    SnowWarsPlugin.sendMessage(sender, "Only an ingame player can do that");
                     return false;
                 }
                 String mapName4 = getMapNameFromArgs(args);
@@ -315,19 +315,19 @@ public final class SnowWarsPlugin extends JavaPlugin {
                         ((Map<String, Map<String, Object>>) Config.raw.get("maps")).get(map.getName())
                                 .put("vote-location", Config.getStringLocation(voteLocation));
                         Config.refreshConfig();
-                        sender.sendMessage("§aDone, " + Config.voteDistance + " blocks around that location will make the player vote for " + mapName4);
+                        SnowWarsPlugin.sendMessage(sender, "§aDone, " + Config.voteDistance + " blocks around that location will make the player vote for " + mapName4);
                         return true;
                     }
                 }
-                sender.sendMessage("§cThat map doesn't exists");
+                SnowWarsPlugin.sendMessage(sender, "§cThat map doesn't exists");
                 return false;
             case "stats":
                 if (mainSnowWarsGame == null || !mainSnowWarsGame.isStarted()) {
-                    sender.sendMessage(Messages.noRunningGame);
+                    SnowWarsPlugin.sendMessage(sender, Messages.noRunningGame);
                 } else {
-                    sender.sendMessage(Messages.statsHeader);
+                    SnowWarsPlugin.sendMessage(sender, Messages.statsHeader);
                     for (Map.Entry<Player, SnowWarsGame.PlayerData> entry: mainSnowWarsGame.getPlayersAndData().entrySet()) {
-                        sender.sendMessage(Messages.getStatsLine(entry.getKey().getDisplayName(), String.valueOf(entry.getValue().getLives())));
+                        SnowWarsPlugin.sendMessage(sender, Messages.getStatsLine(entry.getKey().getDisplayName(), String.valueOf(entry.getValue().getLives())));
                     }
                 }
                 return true;
@@ -397,7 +397,11 @@ public final class SnowWarsPlugin extends JavaPlugin {
 
     public static boolean hasNoPerm(CommandSender sender, String permission) {
         if (sender.hasPermission(permission) || sender.isOp()) return false;
-        sender.sendMessage(Messages.getNoPerm(permission));
+        SnowWarsPlugin.sendMessage(sender, Messages.getNoPerm(permission));
         return true;
+    }
+
+    public static void sendMessage(CommandSender who, String message) {
+        who.sendMessage(Config.prefix + message);
     }
 }
