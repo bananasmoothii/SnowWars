@@ -4,7 +4,7 @@
 # a new config you can delete this one or go in https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml
 # WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...
 
-prefix: '§r[§bSnow Wars§r] '
+prefix: '§r§l[§b§lSnow Wars§r§l] §r'
 
 # blocks on which you can place snow in gamemode adventure
 can-place-snow-on:
@@ -55,8 +55,9 @@ respawn-freeze: 0.6
 # a block under the player, and set it to -1 to disable that feature.
 spawn-safety-check: 1
 spawn-safety-block: chiseled_quartz_block
-# duration (in seconds) of the saturation effect given at respawn
+# saturation effect given at respawn
 saturation-duration: 240
+saturation-level: 1
 
 # delay in seconds between all "ice event". In an ice event, all structure voids get replaced by ice. Set -1 to disable
 ice-event-delay: 150
@@ -87,7 +88,7 @@ anti-cheat:
   snowball-check: 5
   max-snowball-age: 1 # in seconds
   min-snowball-interval: 0.25 # in seconds
-  punition-explosion-power: 1.4
+  punition-explosion-power: 1.6
   punition-explosion-offset: 0.5 # in blocks
 
 # Use /snowwars addmap for this

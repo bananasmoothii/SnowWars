@@ -45,7 +45,8 @@ public abstract class Config {
     public static int iceEventDelay = 150;
     public static int iceEventKeep = 20;
     public static int respawnFreezeMillis = 600;
-    public static int saturationDurationTicks = 240;
+    public static int saturationDurationTicks = 4800;
+    public static short saturationLevel = 1;
     public static double voteDistance = 3d;
     public static int spawnSafetyCheck = 1;
     public static Material spawnSafetyBlock;
@@ -247,6 +248,9 @@ public abstract class Config {
 
             probableCause = "saturation-duration";
             saturationDurationTicks = ((int) raw.get("saturation-duration")) * 20;
+
+            probableCause = "saturation-level";
+            saturationLevel = (short) (int) raw.get("saturation-level");
 
             probableCause = "vote-distance";
             voteDistance = (int) raw.get("vote-distance");

@@ -299,7 +299,7 @@ public class SnowWarsGame {
             player.setAllowFlight(false);
             player.playSound(loc, Sound.BLOCK_PORTAL_TRAVEL, 0.1f, 0.8f);
             player.setGameMode(GameMode.ADVENTURE);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, Config.saturationLevel - 1, false, false, true));
             player.sendTitle(Messages.startTitle, Messages.getStartSubtitle(currentMap.getName()), 10, 80, 20);
         }
         started = true;
@@ -482,7 +482,7 @@ public class SnowWarsGame {
         player.teleport(playerData.spawnLocation);
         player.setGameMode(GameMode.ADVENTURE);
         SnowWarsPlugin.sendMessage(player, Messages.youResuscitated);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, 2, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, Config.saturationLevel - 1, false, false, true));
         playerData.isGhost = false;
         if (Config.giveAtRespawn) giveStartKit(player);
         asyncFilterInventory(player.getInventory());
