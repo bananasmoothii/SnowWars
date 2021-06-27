@@ -150,7 +150,12 @@ public class SnowWarsGame {
             }
         }
         else {
-            SnowWarsPlugin.sendMessage(player, Messages.alreadyJoined);
+            if (! started)
+                SnowWarsPlugin.sendMessage(player, Messages.alreadyJoined);
+            else {
+                SnowWarsPlugin.sendMessage(player, Messages.alreadyStarted);
+                return;
+            }
         }
         player.teleport(Config.mainSpawn);
         player.setGameMode(GameMode.ADVENTURE);
