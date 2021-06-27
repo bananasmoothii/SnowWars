@@ -3,6 +3,7 @@ package fr.bananasmoothii.snowwars;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Snow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -77,8 +78,6 @@ public class PluginListener implements Listener {
         }
     }
 
-    private static final HashMap<Player, Double> fallingPlayers = new HashMap<>(); // double is the height where the player started to fall
-
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
         Player player = event.getPlayer();
@@ -92,23 +91,24 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
             return;
         }
-
+        SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
         Location to = event.getTo();
         //noinspection ConstantConditions
         if (! to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() -1, to.getBlockZ()).getType().isSolid()) {
-            if (! fallingPlayers.containsKey(player))
-                fallingPlayers.put(player, event.getTo().getY());
-            else {
-                double fallingDistance = fallingPlayers.get(player) - event.getTo().getY();
+            if (! data.isFalling) {
+                data.fallingFrom = event.getTo().getY();
+                data.isFalling = true;
+            } else {
+                double fallingDistance = data.fallingFrom - event.getTo().getY();
                 if (fallingDistance > Config.maxFallHeight) {
                     player.setHealth(0.0); // kill the player
-                    fallingPlayers.remove(player);
+                    data.isFalling = false;
                 } else if (fallingDistance < 0) {
-                    fallingPlayers.put(player, event.getTo().getY());
+                    data.fallingFrom = event.getTo().getY();
                 }
             }
         } else {
-            fallingPlayers.remove(player);
+            data.isFalling = false;
         }
 
         if (!mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(player)) {
@@ -217,68 +217,20 @@ public class PluginListener implements Listener {
                 || !mainSnowWarsGame.getPlayers().contains(event.getEntity().getShooter())) return;
 
         Player player = (Player) event.getEntity().getShooter();
-        if (! playerSnowballs.containsKey(player)) {
-            playerSnowballs.put(player, new Snowballs());
-            return;
-        }
-        if (playerSnowballs.get(player).snowballThrownTooFast()) {
+        SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
+        if (! player.hasPermission("snowwars.anticheat.bypass") && data.snowballs.snowballThrownTooFast()) {
             Location explosion = player.getLocation();
             explosion.add(Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
                           Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
                           Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2));
             //noinspection ConstantConditions
             explosion.getWorld().createExplosion(explosion, Config.AntiCheat.punitionExplosionPower, true, true);
-        }
-    }
-
-    public HashMap<Player, Snowballs> playerSnowballs = new HashMap<>();
-
-    public static class Snowballs {
-        private int snowballStrike;
-        private long lastSnowball;
-
-        private long[] snowballs = new long[Config.AntiCheat.snowballCheck];
-        private int index;
-
-        /**
-         * Acts like a setter and a getter: it saves the snowball timestamp and
-         * @return {@code true} if there is a problem with the rate and the player should be punished.
-         *         If it returns true, all latest snowball timestamps are reset.
-         */
-        public boolean snowballThrownTooFast() {
-            long time = System.currentTimeMillis();
-            if (time - lastSnowball >= Config.AntiCheat.maxSnowballAge * 1000L) {
-                reset();
-                lastSnowball = time;
-                snowballStrike = 1;
-                addSnowball(time);
-                return false;
-            }
-            lastSnowball = time;
-            snowballStrike++;
-            addSnowball(time);
-            if (snowballStrike >= Config.AntiCheat.snowballCheck) {
-                if (lastSnowball - getSnowballStrikeStart() <= Config.AntiCheat.minSnowballInterval * Config.AntiCheat.snowballCheck * 1000) {
-                    reset();
-                    return true;
+            Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> {
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    if (onlinePlayer.hasPermission("snowwars.anticheat.notify"))
+                        SnowWarsPlugin.sendMessage(onlinePlayer, "The player " + player.getName() + " was blown up for throwning snowballs too fast. (cheat)");
                 }
-            }
-            return false;
-        }
-
-        private void addSnowball(long time) {
-            snowballs[index++] = time;
-            if (index == snowballs.length) index = 0;
-        }
-
-        public long getSnowballStrikeStart() {
-            return snowballs[index];
-        }
-
-        public void reset() {
-            snowballStrike = 0;
-            snowballs = new long[Config.AntiCheat.snowballCheck];
-            index = 0;
+            });
         }
     }
 }

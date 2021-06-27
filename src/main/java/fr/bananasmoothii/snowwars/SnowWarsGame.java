@@ -58,6 +58,11 @@ public class SnowWarsGame {
         private boolean isGhost;
         private long lastRespawnTime;
 
+        public Snowballs snowballs = new Snowballs();
+        /** Height at which the player started falling */
+        public double fallingFrom;
+        public boolean isFalling;
+
         public PlayerData(int startLives) {
             this.lives = startLives;
         }
