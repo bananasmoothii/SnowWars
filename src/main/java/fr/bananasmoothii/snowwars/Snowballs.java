@@ -31,6 +31,7 @@ public class Snowballs {
         if (snowballStrike >= Config.AntiCheat.snowballCheck) {
             if (lastSnowball - getSnowballStrikeStart() <= Config.AntiCheat.minSnowballInterval * Config.AntiCheat.snowballCheck * 1000) {
                 reset();
+                lastPunition = time;
                 return true;
             }
         }
