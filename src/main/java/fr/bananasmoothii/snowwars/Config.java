@@ -109,8 +109,8 @@ public abstract class Config {
     public static class AntiCheat {
         /** Consider using {@link #setRaw(Map)} instead */
         public static Map<String, Object> raw;
-        public static int snowballCheck = 5, maxSnowballAge = 1;
-        public static double minSnowballInterval = 0.25, punitionExplosionOffset = 0.5, punitionCooldown = 2d;
+        public static int snowballCheck = 5;
+        public static double maxSnowballAge = 1d, minSnowballInterval = 0.25, punitionExplosionOffset = 0.5, punitionCooldown = 2d;
         public static float punitionExplosionPower = 1.4f;
 
         public static void setRaw(Map<String, Object> raw) {
@@ -118,15 +118,15 @@ public abstract class Config {
             probableCause = "anti-cheat.max-snowball-check";
             snowballCheck = (int) raw.get("snowball-check");
             probableCause = "anti-cheat.max-snowball-age";
-            maxSnowballAge = (int) raw.get("max-snowball-age");
+            maxSnowballAge = ((Number) raw.get("max-snowball-age")).doubleValue();
             probableCause = "anti-cheat.min-snowball-interval";
-            minSnowballInterval = (double) raw.get("min-snowball-interval");
+            minSnowballInterval = ((Number) raw.get("min-snowball-interval")).doubleValue();
             probableCause = "anti-cheat.punition-explosion-power";
-            punitionExplosionPower = (float) (double) raw.get("punition-explosion-power");
+            punitionExplosionPower = ((Number) raw.get("punition-explosion-power")).floatValue();
             probableCause = "anti-cheat.punition-explosion-offset";
-            punitionExplosionOffset = (double) raw.get("punition-explosion-offset");
+            punitionExplosionOffset = ((Number) raw.get("punition-explosion-offset")).doubleValue();
             probableCause = "anti-cheat.punition-cooldown";
-            punitionCooldown = (double) raw.get("punition-cooldown");
+            punitionCooldown = ((Number) raw.get("punition-cooldown")).doubleValue();
         }
     }
 
@@ -203,7 +203,7 @@ public abstract class Config {
             PluginListener.snowBlockBreakMaxDrops = (int) Math.ceil(4.0 / craftedSnowAmount);
 
             probableCause = "max-fall-height";
-            maxFallHeight = (double) (Double) raw.get("max-fall-height");
+            maxFallHeight = ((Number) raw.get("max-fall-height")).intValue();
 
             probableCause = "snow-block-break-interval";
             snowBlockBreakInterval = (int) raw.get("snow-block-break-interval");
@@ -221,24 +221,24 @@ public abstract class Config {
             clearInventory = (boolean) raw.get("clear-inventory");
 
             probableCause = "respawn-freeze";
-            respawnFreezeMillis = (int) ((double) raw.get("respawn-freeze") * 1000);
+            respawnFreezeMillis = (int) (((Number) raw.get("respawn-freeze")).doubleValue() * 1000);
 
             probableCause = "snowball-knockback-multiplier";
-            snowballKnockbackMultiplier = (double) raw.get("snowball-knockback-multiplier");
+            snowballKnockbackMultiplier = ((Number) raw.get("snowball-knockback-multiplier")).doubleValue();
 
             probableCause = "snowball-y-add";
-            snowballYAdd = (double) raw.get("snowball-y-add");
+            snowballYAdd = ((Number) raw.get("snowball-y-add")).doubleValue();
 
             probableCause = "snowball-max-y";
-            snowballMaxY = (double) raw.get("snowball-max-y");
+            snowballMaxY = ((Number) raw.get("snowball-max-y")).doubleValue();
 
             probableCause = "snowball-tnt-chance";
-            inversedSnowballTntChance = (double) raw.get("snowball-tnt-chance");
+            inversedSnowballTntChance = ((Number) raw.get("snowball-tnt-chance")).doubleValue();
             assert inversedSnowballTntChance > 0 && inversedSnowballTntChance <= 1 : "snowball tnt chance must be between 0 exclusive and 1 inclusive";
             inversedSnowballTntChance = 1 / inversedSnowballTntChance;
 
             probableCause = "snowball-tnt-power";
-            snowballTntPower = (float) (double) raw.get("snowball-tnt-power");
+            snowballTntPower = ((Number) raw.get("snowball-tnt-power")).floatValue();
 
             probableCause = "ice-event-delay";
             iceEventDelay = (int) raw.get("ice-event-delay");
@@ -253,7 +253,7 @@ public abstract class Config {
             saturationLevel = (short) (int) raw.get("saturation-level");
 
             probableCause = "vote-distance";
-            voteDistance = (int) raw.get("vote-distance");
+            voteDistance = ((Number) raw.get("vote-distance")).doubleValue();
 
             probableCause = "spawn-safety-check";
             spawnSafetyCheck = (int) raw.get("spawn-safety-check");
