@@ -110,7 +110,7 @@ public abstract class Config {
         /** Consider using {@link #setRaw(Map)} instead */
         public static Map<String, Object> raw;
         public static int snowballCheck = 5, maxSnowballAge = 1;
-        public static double minSnowballInterval = 0.25, punitionExplosionOffset = 0.5;
+        public static double minSnowballInterval = 0.25, punitionExplosionOffset = 0.5, punitionCooldown = 2d;
         public static float punitionExplosionPower = 1.4f;
 
         public static void setRaw(Map<String, Object> raw) {
@@ -125,9 +125,9 @@ public abstract class Config {
             punitionExplosionPower = (float) (double) raw.get("punition-explosion-power");
             probableCause = "anti-cheat.punition-explosion-offset";
             punitionExplosionOffset = (double) raw.get("punition-explosion-offset");
+            probableCause = "anti-cheat.punition-cooldown";
+            punitionCooldown = (double) raw.get("punition-cooldown");
         }
-
-
     }
 
     static {

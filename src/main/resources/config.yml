@@ -90,6 +90,8 @@ anti-cheat:
   min-snowball-interval: 0.25 # in seconds
   punition-explosion-power: 1.6
   punition-explosion-offset: 0.5 # in blocks
+  # cooldown in seconds between two punitions.
+  punition-cooldown: 2
 
 # Use /snowwars addmap for this
 maps: {}

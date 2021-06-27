@@ -6,9 +6,9 @@ package fr.bananasmoothii.snowwars;
 public class Snowballs {
     private int snowballStrike;
     private long lastSnowball;
-
     private long[] snowballs = new long[Config.AntiCheat.snowballCheck];
     private int index;
+    private long lastPunition;
 
     /**
      * Acts like a setter and a getter: it saves the snowball timestamp and
@@ -17,6 +17,7 @@ public class Snowballs {
      */
     public boolean snowballThrownTooFast() {
         long time = System.currentTimeMillis();
+        if (time - lastPunition < Config.AntiCheat.punitionCooldown) return false;
         if (time - lastSnowball >= Config.AntiCheat.maxSnowballAge * 1000L) {
             reset();
             lastSnowball = time;
