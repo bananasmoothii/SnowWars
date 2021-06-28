@@ -5,8 +5,7 @@ The goal is to pick up as much snow as you can with you shovel to throw snowball
 as well as craft snow blocks (4 snowballs) to make bridges. By default, snow blocks can only be placed
 on chiseled quartz and other snow blocks.
 
-**This is SnowWars WorldEdit version, so it depends on WorldEdit *(currently not working
-with FastAsyncWorldEdit)***
+**This is SnowWars FastAsyncWorldEdit version, so it depends on FastAsyncWorldEdit *(not WorldEdit)***
 
 ## How to use (and command description):
 1. Set the main spawn point with `/snowwars setmainspawn`
