@@ -17,7 +17,7 @@ public class Snowballs {
      */
     public boolean snowballThrownTooFast() {
         long time = System.currentTimeMillis();
-        if (time - lastPunition < Config.AntiCheat.punitionCooldown) return false;
+        if (time - lastPunition < Config.AntiCheat.punitionCooldown * 1000L) return false;
         if (time - lastSnowball >= Config.AntiCheat.maxSnowballAge * 1000L) {
             reset();
             lastSnowball = time;
