@@ -79,42 +79,42 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
+        if (mainSnowWarsGame == null) return;
         Player player = event.getPlayer();
-        if (Config.maxFallHeight == 0
-                || mainSnowWarsGame == null
-                || ! mainSnowWarsGame.getPlayers().contains(player)
-                || mainSnowWarsGame.getData(player).isGhost())
-            return;
+        Location to = event.getTo();
 
         if (mainSnowWarsGame.isStarted() && System.currentTimeMillis() - mainSnowWarsGame.getData(player).getLastRespawnTime() < Config.respawnFreezeMillis) {
             event.setCancelled(true);
             return;
         }
-        SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
-        Location to = event.getTo();
-        //noinspection ConstantConditions
-        if (! to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() -1, to.getBlockZ()).getType().isSolid()) {
-            if (! data.isFalling) {
-                data.fallingFrom = event.getTo().getY();
-                data.isFalling = true;
-            } else {
-                double fallingDistance = data.fallingFrom - event.getTo().getY();
-                if (fallingDistance > Config.maxFallHeight) {
-                    player.setHealth(0.0); // kill the player
-                    data.isFalling = false;
-                } else if (fallingDistance < 0) {
-                    data.fallingFrom = event.getTo().getY();
+
+        if (Config.maxFallHeight > 0 && mainSnowWarsGame.getPlayers().contains(player)
+                && player.getGameMode() == GameMode.ADVENTURE) {
+            SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
+            //noinspection ConstantConditions
+            if (!to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() - 1, to.getBlockZ()).getType().isSolid()) {
+                if (!data.isFalling) {
+                    data.fallingFrom = to.getY();
+                    data.isFalling = true;
+                } else {
+                    double fallingDistance = data.fallingFrom - to.getY();
+                    if (fallingDistance > Config.maxFallHeight) {
+                        player.setHealth(0.0); // kill the player
+                        data.isFalling = false;
+                    } else if (fallingDistance < 0) {
+                        data.fallingFrom = to.getY();
+                    }
                 }
+            } else {
+                data.isFalling = false;
             }
-        } else {
-            data.isFalling = false;
         }
 
-        if (!mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(player)) {
+        if (!mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(player) && player.getGameMode() == GameMode.ADVENTURE) {
             for (SnowWarsMap snowWarsMap : Config.maps) {
                 if (snowWarsMap.isVoting(player.getLocation())) {
                     // don't spam players at each movement, only when the vote changed
-                    if (!snowWarsMap.equals(mainSnowWarsGame.votingPlayers.get(player))) {
+                    if (snowWarsMap != mainSnowWarsGame.votingPlayers.get(player)) {
                         player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 80, 1, false, false, false));
                         // broadcast
                         for (Player snowWarsPlayer : mainSnowWarsGame.getPlayers()) {

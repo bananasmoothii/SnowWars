@@ -88,7 +88,7 @@ public class SnowWarsGame {
         }
 
         public boolean isPermanentDeath() {
-            return lives == 0;
+            return lives <= 0;
         }
 
         protected void justRespawned() {
@@ -419,9 +419,11 @@ public class SnowWarsGame {
                 if (objective != null) objective.unregister();
             }, 300);
         }
-        for (Player player: players.keySet()) {
-            player.teleport(Config.mainSpawn);
-            player.setAllowFlight(false);
+        for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
+            entry.getKey().teleport(Config.mainSpawn);
+            entry.getKey().setAllowFlight(false);
+            entry.getValue().lives = Config.lives;
+            entry.getValue().isGhost = false;
         }
         started = false;
     }
