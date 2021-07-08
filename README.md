@@ -1,10 +1,11 @@
 # SnowWars
-SnowWars is a little plugin that I made very quickly, made for making little minigames called "Snow Wars".
-It is buggy. Don't expected a plugin for production, unless you know very well how to use it.
-It doesn't do everything alone
+SnowWars is a little plugin that I made, made for making little minigames called "Snow Wars".
 
-**This is SnowWars WorldEdit version, so it depends on WorldEdit *(currently not working
-with FastAsyncWorldEdit)***
+The goal is to pick up as much snow as you can with you shovel to throw snowballs on you opponents,
+as well as craft snow blocks (4 snowballs) to make bridges. By default, snow blocks can only be placed
+on chiseled quartz and other snow blocks.
+
+**This is SnowWars FastAsyncWorldEdit version, so it depends on FastAsyncWorldEdit *(not WorldEdit)***
 
 ## How to use (and command description):
 1. Set the main spawn point with `/snowwars setmainspawn`
