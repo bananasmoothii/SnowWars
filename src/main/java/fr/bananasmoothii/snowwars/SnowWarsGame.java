@@ -1,6 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
-import com.boydti.fawe.util.EditSessionBuilder;
+import com.fastasyncworldedit.core.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEditException;
@@ -618,7 +618,7 @@ public class SnowWarsGame {
         if (itemStack.getType() == Material.SNOW_BLOCK) {
             nbtItem.getStringList("CanPlaceOn").addAll(Config.canPlaceSnowOnStrings);
         } else {
-            NBTList<String> canBreak = nbtItem.getStringList("CanBreak");
+            NBTList<String> canBreak = nbtItem.getStringList("CanDestroy");
             canBreak.add("minecraft:snow");
             canBreak.add("minecraft:snow_block");
         }

@@ -1,6 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
-import com.boydti.fawe.util.EditSessionBuilder;
+import com.fastasyncworldedit.core.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;

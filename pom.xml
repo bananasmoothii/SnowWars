@@ -135,9 +135,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.intellectualsites.fawe</groupId>
+            <groupId>com.fastasyncworldedit</groupId>
             <artifactId>FAWE-Bukkit</artifactId>
-            <version>1.16-637</version>
+            <version>1.17-157</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
