@@ -170,7 +170,7 @@ public abstract class Config {
                 if (givenMaterial == null) throw new InvalidConfigException(material + " doesn't exist");
                 assert givenMaterial.isSolid() : "The block " + givenMaterial.name() + " is not solid";
                 canPlaceSnowOn.add(givenMaterial);
-                canPlaceSnowOnStrings.add(material.toLowerCase());
+                canPlaceSnowOnStrings.add(givenMaterial.getKey().toString());
             }
 
             itemsAbleToBreakSnow = new ArrayList<>();

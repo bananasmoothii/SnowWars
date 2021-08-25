@@ -7,17 +7,15 @@ import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
+import de.tr7zw.changeme.nbtapi.NBTItem;
+import de.tr7zw.changeme.nbtapi.NBTList;
 import fr.bananasmoothii.snowwars.Config.Messages;
-import net.minecraft.server.v1_16_R3.NBTTagCompound;
-import net.minecraft.server.v1_16_R3.NBTTagList;
-import net.minecraft.server.v1_16_R3.NBTTagString;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -616,23 +614,15 @@ public class SnowWarsGame {
     public static ItemStack filterItemStack(@NotNull ItemStack itemStack) {
         if (itemStack.getType() != Material.SNOW_BLOCK && ! Config.itemsAbleToBreakSnow.contains(itemStack.getType()))
             return itemStack;
-        net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        NBTTagCompound compound = nmsItemStack.hasTag() ? nmsItemStack.getTag() : new NBTTagCompound();
-        NBTTagList tagList = new NBTTagList();
+        NBTItem nbtItem = new NBTItem(itemStack);
         if (itemStack.getType() == Material.SNOW_BLOCK) {
-            for (String material : Config.canPlaceSnowOnStrings) {
-                tagList.add(NBTTagString.a(material));
-            }
-            //noinspection ConstantConditions
-            compound.set("CanPlaceOn", tagList);
+            nbtItem.getStringList("CanPlaceOn").addAll(Config.canPlaceSnowOnStrings);
         } else {
-            tagList.add(NBTTagString.a("snow_block"));
-            tagList.add(NBTTagString.a("snow"));
-            //noinspection ConstantConditions
-            compound.set("CanDestroy", tagList);
+            NBTList<String> canBreak = nbtItem.getStringList("CanBreak");
+            canBreak.add("minecraft:snow");
+            canBreak.add("minecraft:snow_block");
         }
-        nmsItemStack.setTag(compound);
-        return CraftItemStack.asBukkitCopy(nmsItemStack);
+        return nbtItem.getItem();
     }
 
     public static class UnableToStartException extends Exception {

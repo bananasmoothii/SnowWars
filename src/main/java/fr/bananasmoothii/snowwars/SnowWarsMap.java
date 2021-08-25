@@ -30,7 +30,7 @@ public class SnowWarsMap {
 
     private @Nullable Location voteLocation;
 
-    @SuppressWarnings({"NullableProblems", "ConstantConditions"})
+    @SuppressWarnings({"NullableProblems"})
     public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, @NotNull CuboidRegion sourceRegion, Collection<Location> spawnLocations, @Nullable Location voteLocation) {
         this.name = name;
         if (sourceSpawn != null && sourceSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World");
@@ -56,7 +56,6 @@ public class SnowWarsMap {
     /**
      * WARNING: this constructor is only intended to use with {@link SnowWarsMap#setPlaySpawn(Location)} after
      */
-    @SuppressWarnings("ConstantConditions")
     public SnowWarsMap(String name, Location sourceSpawn, @NotNull CuboidRegion sourceRegion) {
         this(name, sourceSpawn, null, sourceRegion, new ArrayList<>(), null);
     }
