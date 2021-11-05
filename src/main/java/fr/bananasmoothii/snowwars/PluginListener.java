@@ -25,7 +25,8 @@ import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static fr.bananasmoothii.snowwars.SnowWarsPlugin.mainSnowWarsGame;
@@ -82,6 +83,8 @@ public class PluginListener implements Listener {
         if (mainSnowWarsGame == null) return;
         Player player = event.getPlayer();
         Location to = event.getTo();
+
+        if (!mainSnowWarsGame.getPlayers().contains(player)) return;
 
         if (mainSnowWarsGame.isStarted() && System.currentTimeMillis() - mainSnowWarsGame.getData(player).getLastRespawnTime() < Config.respawnFreezeMillis) {
             event.setCancelled(true);
