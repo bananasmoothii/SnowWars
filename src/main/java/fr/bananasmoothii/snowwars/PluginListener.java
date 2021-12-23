@@ -94,7 +94,6 @@ public class PluginListener implements Listener {
         if (Config.maxFallHeight > 0 && mainSnowWarsGame.getPlayers().contains(player)
                 && player.getGameMode() == GameMode.ADVENTURE) {
             SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
-            //noinspection ConstantConditions
             if (!to.getWorld().getBlockAt(to.getBlockX(), to.getBlockY() - 1, to.getBlockZ()).getType().isSolid()) {
                 if (!data.isFalling) {
                     data.fallingFrom = to.getY();
@@ -142,8 +141,7 @@ public class PluginListener implements Listener {
             event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), Config.snowballTntPower, false);
             return;
         }
-        if (!(event.getHitEntity() instanceof Player)) return;
-        Player hitPlayer = (Player) event.getHitEntity();
+        if (!(event.getHitEntity() instanceof Player hitPlayer)) return;
         Vector velocity = hitPlayer.getVelocity();
         ProjectileSource source = event.getEntity().getShooter();
         if (mainSnowWarsGame != null
@@ -181,7 +179,6 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
     }
 
-    @SuppressWarnings("ConstantConditions")
     @EventHandler
     public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
         String toName = event.getTo().getWorld().getName();
@@ -215,17 +212,15 @@ public class PluginListener implements Listener {
         if (event.getEntity().getType() != EntityType.SNOWBALL
                 || mainSnowWarsGame == null
                 || !mainSnowWarsGame.isStarted()
-                || !(event.getEntity().getShooter() instanceof Player)
+                || !(event.getEntity().getShooter() instanceof Player player)
                 || !mainSnowWarsGame.getPlayers().contains(event.getEntity().getShooter())) return;
 
-        Player player = (Player) event.getEntity().getShooter();
         SnowWarsGame.PlayerData data = mainSnowWarsGame.getData(player);
         if (! player.hasPermission("snowwars.anticheat.bypass") && data.snowballs.snowballThrownTooFast()) {
             Location explosion = player.getLocation();
             explosion.add(Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
                           Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2),
                           Config.AntiCheat.punitionExplosionOffset * ThreadLocalRandom.current().nextInt(-1, 2));
-            //noinspection ConstantConditions
             explosion.getWorld().createExplosion(explosion, Config.AntiCheat.punitionExplosionPower, true, true);
             Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> {
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {

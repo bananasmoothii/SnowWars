@@ -1,14 +1,14 @@
 package fr.bananasmoothii.snowwars;
 
-import com.fastasyncworldedit.core.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import de.tr7zw.changeme.nbtapi.NBTItem;
-import de.tr7zw.changeme.nbtapi.NBTList;
+import de.tr7zw.nbtapi.NBTItem;
+import de.tr7zw.nbtapi.NBTList;
 import fr.bananasmoothii.snowwars.Config.Messages;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -163,7 +163,6 @@ public class SnowWarsGame {
             player.setGameMode(GameMode.SPECTATOR);
     }
 
-    @SuppressWarnings("ConstantConditions")
     public void removePlayer(Player player) {
         players.remove(player);
         if (started) {
@@ -271,7 +270,6 @@ public class SnowWarsGame {
             e.printStackTrace();
         }
         setNewRecipes();
-        //noinspection ConstantConditions
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = scoreboard.getObjective("lives-left");
         if (objective != null) objective.unregister();
@@ -338,7 +336,8 @@ public class SnowWarsGame {
                 bossBar.setColor(BarColor.RED);
         }, 1, 1);
         Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
-            try (final EditSession replaceEditSession = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+            try (final EditSession replaceEditSession = WorldEdit.getInstance().newEditSessionBuilder()
+                    .world(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastMode(false).build()) {
                 replaceEditSession.replaceBlocks(currentMap.getPlayRegion(), replaceFromBlocks, replaceToBlock);
 
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
@@ -347,7 +346,8 @@ public class SnowWarsGame {
                         player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
                     }
                     bossBar.removeAll();
-                    try (EditSession undoES = new EditSessionBuilder(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastmode(false).build()) {
+                    try (EditSession undoES = WorldEdit.getInstance().newEditSessionBuilder()
+                            .world(BukkitAdapter.adapt(currentMap.getPlaySpawn().getWorld())).fastMode(false).build()) {
                         replaceEditSession.undo(undoES);
                     }
                 }, Config.iceEventKeep * 20L);
@@ -546,18 +546,16 @@ public class SnowWarsGame {
             if (result.getType() == Material.SNOW_BLOCK)
                 result.setAmount(Config.craftedSnowAmount);
 
-            if (recipe instanceof ShapelessRecipe) {
+            if (recipe instanceof ShapelessRecipe oldCopy) {
                 newRecipe = new ShapelessRecipe(key(((Keyed) recipe).getKey().getKey()), result);
                 ShapelessRecipe copy = (ShapelessRecipe) newRecipe;
-                ShapelessRecipe oldCopy = (ShapelessRecipe) recipe;
                 for (ItemStack oldItemStack : oldCopy.getIngredientList()) {
                     copy.addIngredient(1, oldItemStack.getType());
                 }
                 copy.setGroup(oldCopy.getGroup());
-            } else if (recipe instanceof ShapedRecipe) {
+            } else if (recipe instanceof ShapedRecipe oldCopy) {
                 newRecipe = new ShapedRecipe(key(((Keyed) recipe).getKey().getKey()), result);
                 ShapedRecipe copy = (ShapedRecipe) newRecipe;
-                ShapedRecipe oldCopy = (ShapedRecipe) recipe;
                 copy.shape(oldCopy.getShape());
                 for (Map.Entry<Character, ItemStack> entry: oldCopy.getIngredientMap().entrySet()) {
                     if (entry.getValue() != null)

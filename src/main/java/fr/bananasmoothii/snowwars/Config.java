@@ -288,7 +288,6 @@ public abstract class Config {
                 for (String stringSpawn: (List<String>) rawMap.get("spawns")) {
                     spawns.add(getLocation(playWorld, stringSpawn));
                 }
-                //noinspection ConstantConditions
                 maps.add(new SnowWarsMap(entry.getKey(),
                         getLocation(sourceWorld, (String) rawMap.get("spawn")),
                         getLocation(playWorld, (String) rawMap.get("play-spawn")),
@@ -339,11 +338,14 @@ public abstract class Config {
     public static void refreshConfig() {
         try {
             FileWriter fileWriter = new FileWriter("plugins/SnowWars/config.yml");
-            fileWriter.write("# GitHub: https://github.com/bananasmoothii/SnowWars\n" +
-                    "# Discord: https://discord.gg/HNHfEJXwbs\n" +
-                    "# WARNING: All comments below (except this header section) will be gone after the first command that refreshes the config, if you want to find\n" +
-                    "# a new config you can delete this one or head to https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml\n" +
-                    "# WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...\n\n");
+            fileWriter.write("""
+                    # GitHub: https://github.com/bananasmoothii/SnowWars
+                    # Discord: https://discord.gg/HNHfEJXwbs
+                    # WARNING: All comments below (except this header section) will be gone after the first command that refreshes the config, if you want to find
+                    # a new config you can delete this one or head to https://github.com/bananasmoothii/SnowWars/blob/master/src/main/resources/config.yml
+                    # WARNING 2: Make a backup of your world because the plugin will mess with player inventories, locations, gamemodes...
+
+                    """);
             yaml.dump(raw, fileWriter);
         } catch (IOException e) {
             e.printStackTrace();

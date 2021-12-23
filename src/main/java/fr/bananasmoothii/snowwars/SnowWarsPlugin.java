@@ -84,11 +84,10 @@ public final class SnowWarsPlugin extends JavaPlugin {
                 }
                 return true;
             case "quit":
-                if (!(sender instanceof Player)) {
+                if (!(sender instanceof Player player)) {
                     SnowWarsPlugin.sendMessage(sender, "§cOnly an in-game player can do that");
                     return false;
                 }
-                Player player = (Player) sender;
                 if (mainSnowWarsGame==null || !mainSnowWarsGame.getPlayers().contains(player)) {
                     SnowWarsPlugin.sendMessage(sender, "§cYou can't do that.");
                 }

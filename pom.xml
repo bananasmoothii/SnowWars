@@ -6,14 +6,14 @@
 
     <groupId>fr.bananasmoothii</groupId>
     <artifactId>SnowWars</artifactId>
-    <version>0.13-fawe</version>
+    <version>0.14-fawe</version>
     <packaging>jar</packaging>
 
     <name>SnowWars</name>
 
     <description>This plugin is a minigame plugin for running a snow wars</description>
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -55,12 +55,12 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <relocations>
+                            <!--relocations>
                                 <relocation>
                                     <pattern>de.tr7zw.changeme.nbtapi</pattern>
                                     <shadedPattern>de.tr7zw.nbtapi.SCshade</shadedPattern>
                                 </relocation>
-                            </relocations>
+                            </relocations-->
                         </configuration>
                     </execution>
                 </executions>
@@ -103,16 +103,16 @@
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc</id>
+            <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
         <repository>
-            <id>IntellectualSites</id>
-            <url>https://mvn.intellectualsites.com/content/repositories/releases/</url>
+            <id>S01 Sonatype Snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>codemc-repo</id>
@@ -123,9 +123,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.17.1-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.18.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -134,23 +134,37 @@
             <version>22.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- FAWE Core API -->
         <dependency>
             <groupId>com.fastasyncworldedit</groupId>
-            <artifactId>FAWE-Bukkit</artifactId>
-            <version>1.17-157</version>
+            <artifactId>FastAsyncWorldEdit-Core</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- FAWE Bukkit API -->
+        <dependency>
+            <groupId>com.fastasyncworldedit</groupId>
+            <artifactId>FastAsyncWorldEdit-Bukkit</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>FastAsyncWorldEdit-Core</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.2</version>
+            <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>de.tr7zw</groupId>
-            <artifactId>item-nbt-api</artifactId>
-            <version>2.8.0</version>
-            <scope>compile</scope>
+            <artifactId>item-nbt-api-plugin</artifactId>
+            <version>2.9.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

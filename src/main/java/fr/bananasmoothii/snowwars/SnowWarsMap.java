@@ -1,7 +1,7 @@
 package fr.bananasmoothii.snowwars;
 
-import com.fastasyncworldedit.core.util.EditSessionBuilder;
 import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
@@ -67,7 +67,7 @@ public class SnowWarsMap {
         BlockVector3 srcCenter = Util.locationToBlockVector3(sourceSpawn);
         BlockVector3 destCenter = Util.locationToBlockVector3(playSpawn);
 
-        try (EditSession editSession = new EditSessionBuilder(destWorld).fastmode(false).build()) {
+        try (EditSession editSession = WorldEdit.getInstance().newEditSessionBuilder().world(destWorld).fastMode(false).build()) {
             ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(srcWorld, sourceRegion, srcCenter, editSession, destCenter);
             forwardExtentCopy.setCopyingEntities(true);
             Operations.complete(forwardExtentCopy);
