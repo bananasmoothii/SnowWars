@@ -15,10 +15,13 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
@@ -179,7 +182,7 @@ public class PluginListener implements Listener {
             event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
         String toName = event.getTo().getWorld().getName();
         if (! event.getFrom().getWorld().getName().equals(toName)) {
@@ -192,6 +195,11 @@ public class PluginListener implements Listener {
                 event.setCancelled(true);
                 SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseQuit);
             }
+        }
+        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
+                && event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE && !event.getPlayer().hasPermission("snowwars.teleport")) {
+            event.setCancelled(true);
+            SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseQuit);
         }
     }
 
@@ -229,5 +237,18 @@ public class PluginListener implements Listener {
                 }
             });
         }
+    }
+
+    @EventHandler
+    public void onInventoryOpenEvent(InventoryOpenEvent event) {
+        SnowWarsGame.filterInventory(event.getInventory());
+    }
+
+    @EventHandler
+    public void onCraftItemEvent(CraftItemEvent event) {
+        final ItemStack item = event.getCurrentItem();
+        if (item == null) return;
+        if (Config.itemsAbleToBreakSnow.contains(item.getType()))
+            SnowWarsGame.filterItemStack(item);
     }
 }

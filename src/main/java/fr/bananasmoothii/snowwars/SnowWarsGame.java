@@ -600,6 +600,7 @@ public class SnowWarsGame {
     }
 
     public static void filterInventory(Inventory inventory) {
+        if (inventory.isEmpty()) return;
         int i = 0;
         for (ItemStack itemStack: inventory.getContents()) {
             if (itemStack != null) {
@@ -619,6 +620,7 @@ public class SnowWarsGame {
             NBTList<String> canBreak = nbtItem.getStringList("CanDestroy");
             canBreak.add("minecraft:snow");
             canBreak.add("minecraft:snow_block");
+            canBreak.add("minecraft:powder_snow");
         }
         return nbtItem.getItem();
     }
