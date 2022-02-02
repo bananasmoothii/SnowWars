@@ -8,6 +8,7 @@ import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,19 +75,21 @@ public class SnowWarsMap {
         }
     }
 
-    public void refreshAndCatchExceptions() {
-        try {
-            refresh();
-        } catch (WorldEditException e) {
-            CustomLogger.severe("The map will not be copied");
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars addmap");
-            e.printStackTrace();
-        } catch (NoSuchMethodError e) {
-            CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
-            e.printStackTrace();
-        }
+    public void asyncRefreshAndCatchExceptions() {
+        Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> {
+            try {
+                refresh();
+            } catch (WorldEditException e) {
+                CustomLogger.severe("The map will not be copied");
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars addmap");
+                e.printStackTrace();
+            } catch (NoSuchMethodError e) {
+                CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
+                e.printStackTrace();
+            }
+        });
     }
 
     public String getName() {

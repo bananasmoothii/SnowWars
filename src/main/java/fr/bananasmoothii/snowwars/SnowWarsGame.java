@@ -203,8 +203,7 @@ public class SnowWarsGame {
             startCountDownTask = null;
             return;
         }
-        //noinspection ConstantConditions
-        currentMap.refreshAndCatchExceptions();
+        currentMap.asyncRefreshAndCatchExceptions();
         votingPlayers.clear();
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
             try {
@@ -212,10 +211,9 @@ public class SnowWarsGame {
                     startCountDownTask.cancel();
                     startCountDownTask = null;
                 }
-                if (currentMap.getDifferentSpawns() > players.size()) {
+                if (currentMap.getDifferentSpawns() < players.size()) {
                     currentMap = chooseMap(null);
-                    //noinspection ConstantConditions
-                    currentMap.refreshAndCatchExceptions();
+                    currentMap.asyncRefreshAndCatchExceptions();
                 }
                 syncStart();
             } catch (UnableToStartException e) {
@@ -270,7 +268,7 @@ public class SnowWarsGame {
                 Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
     }
 
-    private @Nullable SnowWarsMap chooseMap(@Nullable String mapName) throws UnableToStartException {
+    private @NotNull SnowWarsMap chooseMap(@Nullable String mapName) throws UnableToStartException {
         if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
         ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
         @Nullable SnowWarsMap chosenMap = null;
