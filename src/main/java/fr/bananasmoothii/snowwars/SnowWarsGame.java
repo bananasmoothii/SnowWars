@@ -3,7 +3,6 @@ package fr.bananasmoothii.snowwars;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
@@ -193,13 +192,32 @@ public class SnowWarsGame {
                 }
             }, 0, 20);
         }
+        // choosing and refreshing map
+        try {
+            currentMap = chooseMap(mapName);
+        } catch (UnableToStartException e) {
+            e.printStackTrace();
+            if (source != null)
+                e.showFullMinecraftMessageTo(source);
+            if (startCountDownTask != null) startCountDownTask.cancel();
+            startCountDownTask = null;
+            return;
+        }
+        //noinspection ConstantConditions
+        currentMap.refreshAndCatchExceptions();
+        votingPlayers.clear();
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
             try {
                 if (startCountDownTask != null) {
                     startCountDownTask.cancel();
                     startCountDownTask = null;
                 }
-                syncStart(mapName);
+                if (currentMap.getDifferentSpawns() > players.size()) {
+                    currentMap = chooseMap(null);
+                    //noinspection ConstantConditions
+                    currentMap.refreshAndCatchExceptions();
+                }
+                syncStart();
             } catch (UnableToStartException e) {
                 e.printStackTrace();
                 if (source != null)
@@ -208,81 +226,10 @@ public class SnowWarsGame {
         }, startCountdown ? 200 : 0);
     }
 
-    public void syncStart(@Nullable String mapName) throws UnableToStartException {
-        if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
-        ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
-        if (mapName != null) {
-            for (SnowWarsMap map : Config.maps) {
-                if (mapName.equals(map.getName())) {
-                    if (map.getDifferentSpawns() == 0)
-                        throw new UnableToStartException("That map has no spawn locations. Please set spawn locations with §n/snowwars addspawn");
-                    currentMap = map;
-                    break;
-                }
-            }
-            if (currentMap == null) {
-                throw new UnableToStartException("That map doesn't exist: " + mapName);
-            }
-        } else {
-            int totalPlayers = players.size();
-
-            HashMap<SnowWarsMap, Integer> mapVoting = new HashMap<>();
-            int minimumVotesToWin = totalPlayers / 2 + 1;
-            @Nullable SnowWarsMap votedMap = null;
-            for (SnowWarsMap map : votingPlayers.values()) {
-                Integer votes = mapVoting.get(map);
-                if (votes == null) votes = 1;
-                else votes++;
-                if (votes >= minimumVotesToWin) {
-                    votedMap = map;
-                    break;
-                }
-                mapVoting.put(map, votes);
-            }
-
-            if (votedMap != null && votedMap.getDifferentSpawns() >= totalPlayers) {
-                currentMap = votedMap;
-            }
-            else {
-                if (votedMap != null && votedMap.getDifferentSpawns() < totalPlayers) {
-                    for (Player player : players.keySet()) {
-                        SnowWarsPlugin.sendMessage(player, Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
-                    }
-                }
-
-                Config.maps.sort(Comparator.comparingInt(SnowWarsMap::getDifferentSpawns));
-                for (SnowWarsMap map : Config.maps) {
-                    if (map.getDifferentSpawns() >= totalPlayers) {
-                        possibleMaps.add(map);
-                    }
-                }
-                if (possibleMaps.isEmpty()) {
-                    if (Config.maps.isEmpty()) {
-                        throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
-                    }
-                    currentMap = Config.maps.get(Config.maps.size() - 1);
-                    if (currentMap.getDifferentSpawns() == 0) {
-                        throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
-                    }
-                } else {
-                    currentMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size()));
-                }
-            }
-        }
-        votingPlayers.clear();
-        try {
-            //noinspection ConstantConditions
-            currentMap.refresh();
-        } catch (WorldEditException e) {
-            CustomLogger.severe("The map will not be copied");
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars addmap");
-            e.printStackTrace();
-        } catch (NoSuchMethodError e) {
-            CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
-            e.printStackTrace();
-        }
+    /**
+     * This is not refreshing the map!
+     */
+    private void syncStart() throws UnableToStartException {
         setNewRecipes();
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = scoreboard.getObjective("lives-left");
@@ -321,6 +268,73 @@ public class SnowWarsGame {
         updateScoreBoard();
         iceEventTask = Bukkit.getScheduler().runTaskTimer(SnowWarsPlugin.inst(), this::iceEvent,
                 Config.iceEventDelay * 20L, Config.iceEventDelay * 20L);
+    }
+
+    private @Nullable SnowWarsMap chooseMap(@Nullable String mapName) throws UnableToStartException {
+        if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
+        ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
+        @Nullable SnowWarsMap chosenMap = null;
+        if (mapName != null) {
+            for (SnowWarsMap map : Config.maps) {
+                if (mapName.equals(map.getName())) {
+                    if (map.getDifferentSpawns() == 0)
+                        throw new UnableToStartException("That map has no spawn locations. Please set spawn locations with §n/snowwars addspawn");
+                    chosenMap = map;
+                    break;
+                }
+            }
+            if (chosenMap == null) {
+                throw new UnableToStartException("That map doesn't exist: " + mapName);
+            }
+        } else {
+            int totalPlayers = players.size();
+
+            HashMap<SnowWarsMap, Integer> mapVoting = new HashMap<>();
+            int minimumVotesToWin = totalPlayers / 2 + 1;
+            @Nullable SnowWarsMap votedMap = null;
+            for (SnowWarsMap map : votingPlayers.values()) {
+                Integer votes = mapVoting.get(map);
+                if (votes == null) votes = 1;
+                else votes++;
+                if (votes >= minimumVotesToWin) {
+                    votedMap = map;
+                    break;
+                }
+                mapVoting.put(map, votes);
+            }
+
+            if (votedMap != null && votedMap.getDifferentSpawns() >= totalPlayers) {
+                chosenMap = votedMap;
+            }
+            else {
+                if (votedMap != null && votedMap.getDifferentSpawns() < totalPlayers) {
+                    for (Player player : players.keySet()) {
+                        SnowWarsPlugin.sendMessage(player, Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
+                    }
+                }
+
+                // reverse sorting
+                Config.maps.sort((map1, map2) -> map2.getDifferentSpawns() - map1.getDifferentSpawns());
+                for (SnowWarsMap map : Config.maps) {
+                    if (map.getDifferentSpawns() >= totalPlayers) {
+                        possibleMaps.add(map);
+                    }
+                    else break; // the others will be below totalPlayers
+                }
+                if (possibleMaps.isEmpty()) {
+                    if (Config.maps.isEmpty()) {
+                        throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
+                    }
+                    chosenMap = Config.maps.get(Config.maps.size() - 1);
+                    if (chosenMap.getDifferentSpawns() == 0) {
+                        throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
+                    }
+                } else {
+                    chosenMap = possibleMaps.get(ThreadLocalRandom.current().nextInt(possibleMaps.size()));
+                }
+            }
+        }
+        return chosenMap;
     }
 
     /**

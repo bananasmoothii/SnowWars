@@ -74,6 +74,21 @@ public class SnowWarsMap {
         }
     }
 
+    public void refreshAndCatchExceptions() {
+        try {
+            refresh();
+        } catch (WorldEditException e) {
+            CustomLogger.severe("The map will not be copied");
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            CustomLogger.severe("The map will not be copied. You probably didn't set the source with /snowwars addmap");
+            e.printStackTrace();
+        } catch (NoSuchMethodError e) {
+            CustomLogger.severe("The map will not be copied. There is a problem with WorldEdit");
+            e.printStackTrace();
+        }
+    }
+
     public String getName() {
         return name;
     }

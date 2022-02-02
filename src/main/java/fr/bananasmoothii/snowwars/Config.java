@@ -401,7 +401,7 @@ public abstract class Config {
         ((Map<String, Map<String, Object>>) raw.get("maps")).put(needsToSetPlaySpawn.getName(), map);
         refreshConfig();
         SnowWarsPlugin.sendMessage(player, "§aDone. Don't forget to add spawn locations with §n/snowwars addspawn " + needsToSetPlaySpawn.getName());
-        needsToSetPlaySpawn.refresh();
+        needsToSetPlaySpawn.refreshAndCatchExceptions();
         needsToSetPlaySpawn = null;
         return true;
     }
