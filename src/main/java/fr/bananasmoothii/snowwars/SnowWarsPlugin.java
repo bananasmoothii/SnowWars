@@ -12,7 +12,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,8 +48,6 @@ public final class SnowWarsPlugin extends JavaPlugin {
     }
 
     public static @Nullable SnowWarsGame mainSnowWarsGame;
-
-    @Nullable BukkitTask startCountDownTask;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -117,21 +114,11 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     if (hasNoPerm(sender, "snowwars.choosemap")) return true;
                     mapName = getMapNameFromArgs(args);
                 } else mapName = null;
-                final long softStartTime = System.currentTimeMillis();
-                if (startCountDownTask != null) {
+                if (mainSnowWarsGame.startCountDownTask != null || mainSnowWarsGame.isStarted()) {
                     SnowWarsPlugin.sendMessage(sender, Messages.alreadyStarted);
                     return true;
                 }
-                startCountDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
-                    for (Player p : mainSnowWarsGame.getPlayers()) {
-                        SnowWarsPlugin.sendMessage(p, Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
-                    }
-                }, 0, 20);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    startCountDownTask.cancel();
-                    mainSnowWarsGame.start(sender, mapName);
-                    startCountDownTask = null;
-                }, 200);
+                mainSnowWarsGame.start(sender, mapName, true);
                 return true;
             case "forcestart":
                 if (hasNoPerm(sender, "snowwars.forcestart")) return true;
@@ -152,7 +139,7 @@ public final class SnowWarsPlugin extends JavaPlugin {
                     if (hasNoPerm(sender, "snowwars.choosemap")) return true;
                     mapName1 = getMapNameFromArgs(args);
                 } else mapName1 = null;
-                mainSnowWarsGame.start(sender, mapName1);
+                mainSnowWarsGame.start(sender, mapName1, false);
                 SnowWarsPlugin.sendMessage(sender, "§aGame started.");
                 return true;
             case "stop":

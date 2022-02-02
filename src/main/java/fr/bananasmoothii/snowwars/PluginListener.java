@@ -241,11 +241,13 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onInventoryOpenEvent(InventoryOpenEvent event) {
-        SnowWarsGame.filterInventory(event.getInventory());
+        if (mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer()))
+            SnowWarsGame.filterInventory(event.getInventory());
     }
 
     @EventHandler
     public void onCraftItemEvent(CraftItemEvent event) {
+        if (mainSnowWarsGame == null || mainSnowWarsGame.getPlayers().contains(event.getWhoClicked())) return;
         final ItemStack item = event.getCurrentItem();
         if (item == null) return;
         if (Config.itemsAbleToBreakSnow.contains(item.getType()))

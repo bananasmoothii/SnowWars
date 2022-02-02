@@ -30,6 +30,7 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +45,7 @@ public class SnowWarsGame {
     private Scoreboard scoreboard;
     private @Nullable BukkitTask iceEventTask;
     private @Nullable SnowWarsMap currentMap;
+    @Nullable BukkitTask startCountDownTask;
     /**
      * {@link SnowWarsGame} does not manage this, {@link PluginListener#onPlayerMoveEvent(PlayerMoveEvent)} does.
      * SnowWarsGame just reads that map.
@@ -172,7 +174,7 @@ public class SnowWarsGame {
         }
     }
 
-    public void addPlayer(Iterable<? extends Player> playerList) {
+    public void addPlayer(@NotNull Iterable<? extends Player> playerList) {
         for (Player player: playerList) {
             addPlayer(player);
         }
@@ -182,16 +184,28 @@ public class SnowWarsGame {
         return started;
     }
 
-    public void start(final @Nullable CommandSender source, final @Nullable String mapName) {
-        Bukkit.getScheduler().runTask(SnowWarsPlugin.inst(), () -> {
+    public void start(final @Nullable CommandSender source, final @Nullable String mapName, final boolean startCountdown) {
+        final long softStartTime = System.currentTimeMillis();
+        if (startCountdown) {
+            startCountDownTask = Bukkit.getScheduler().runTaskTimerAsynchronously(SnowWarsPlugin.inst(), () -> {
+                for (Player p : getPlayers()) {
+                    SnowWarsPlugin.sendMessage(p, Messages.getStartingIn(String.valueOf(10 - (System.currentTimeMillis() - softStartTime) / 1000)));
+                }
+            }, 0, 20);
+        }
+        Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
             try {
+                if (startCountDownTask != null) {
+                    startCountDownTask.cancel();
+                    startCountDownTask = null;
+                }
                 syncStart(mapName);
             } catch (UnableToStartException e) {
                 e.printStackTrace();
                 if (source != null)
                     e.showFullMinecraftMessageTo(source);
             }
-        });
+        }, startCountdown ? 200 : 0);
     }
 
     public void syncStart(@Nullable String mapName) throws UnableToStartException {
@@ -591,7 +605,8 @@ public class SnowWarsGame {
         }
     }
 
-    private static NamespacedKey key(String name) {
+    @Contract("_ -> new")
+    private static @NotNull NamespacedKey key(String name) {
         return new NamespacedKey(SnowWarsPlugin.inst(), name);
     }
 
@@ -599,14 +614,12 @@ public class SnowWarsGame {
         Bukkit.getScheduler().runTaskAsynchronously(SnowWarsPlugin.inst(), () -> filterInventory(inventory));
     }
 
-    public static void filterInventory(Inventory inventory) {
+    public static void filterInventory(@NotNull Inventory inventory) {
         if (inventory.isEmpty()) return;
         int i = 0;
         for (ItemStack itemStack: inventory.getContents()) {
-            if (itemStack != null) {
-                inventory.setItem(i, filterItemStack(itemStack));
-                i++;
-            }
+            if (itemStack != null) inventory.setItem(i, filterItemStack(itemStack));
+            i++;
         }
     }
 
