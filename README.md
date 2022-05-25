@@ -45,8 +45,6 @@ Players can run `/snowwars join`, `start` and `quit` without admin perms
 - `snowwars.iceevent`
 - `snowwars.addlive`
 - `snowwars.choosemap` (allows you to specify a map in `/snowwars start` and `/snowwars forcestart`)
-- `snowwars.teleport` (allows you to be teleported to another world without quitting the game or to be teleported to the
-  "snowwars" world)
 - `snowwars.setvotelocation`
 - `snowwars.anticheat.bypass`
 - `snowwars.anticheat.notify` (notifies you when someone got punished for cheating)
@@ -81,4 +79,5 @@ messages:
   noRunningGame: '§eDésolé, il n''y a actuellement pas de jeu en cours.'
   statsHeader: '§b§nVoici comment le jeu de Snow Wars se déroule:'
   statsLine: '§9{player}§9 : §l{lives}§9 vies'
+  playerRunningAway: '§c§lMolo l''asticot, ne vas pas trop loin !'
 ```

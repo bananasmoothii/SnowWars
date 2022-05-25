@@ -1,5 +1,6 @@
 package fr.bananasmoothii.snowwars;
 
+import fr.bananasmoothii.snowwars.Config.Messages;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -11,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -81,6 +83,22 @@ public class PluginListener implements Listener {
     }
 
     @EventHandler
+    public void onBlockPlaceEvent(BlockPlaceEvent event) {
+        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted()
+                && mainSnowWarsGame.getPlayers().contains(event.getPlayer())) {
+            final Location location = event.getBlock().getLocation();
+            final int x = location.getBlockX(),
+                    y = location.getBlockY(),
+                    z = location.getBlockZ();
+            //noinspection ConstantConditions
+            if (! mainSnowWarsGame.getCurrentMap().getPlayRegion().contains(x, y, z)) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Messages.playerRunningAway);
+            }
+        }
+    }
+
+    @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
         if (mainSnowWarsGame == null) return;
         Player player = event.getPlayer();
@@ -122,7 +140,7 @@ public class PluginListener implements Listener {
                         player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 80, 1, false, false, false));
                         // broadcast
                         for (Player snowWarsPlayer : mainSnowWarsGame.getPlayers()) {
-                            SnowWarsPlugin.sendMessage(snowWarsPlayer, Config.Messages.getHasVoted(player.getDisplayName(), snowWarsMap.getName()));
+                            SnowWarsPlugin.sendMessage(snowWarsPlayer, Messages.getHasVoted(player.getDisplayName(), snowWarsMap.getName()));
                             snowWarsPlayer.playNote(player.getLocation(), Instrument.CHIME, new Note(18));
                         }
                         mainSnowWarsGame.votingPlayers.put(player, snowWarsMap);

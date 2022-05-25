@@ -57,7 +57,7 @@ public abstract class Config {
         public static String playerDiedBroadcast, playerKilledBroadcast, playerDiedTitle, playerDiedSubtitle, playerDiedForeverSubtitle,
                 noPerm, join, quit, alreadyJoined, youResuscitated, playerWon, alreadyStarted, alreadyStartedSpectator, livesLeft, bossBar,
                 notEnoughPlayers, startingIn, pleaseUseJoin, pleaseUseQuit, defaultWinner, startTitle, startSubtitle, hasVoted,
-                notEnoughSpawnPoints, noRunningGame, statsHeader, statsLine;
+                notEnoughSpawnPoints, noRunningGame, statsHeader, statsLine, playerRunningAway;
 
         public static String getPlayerDiedOrKilledBroadcast(String player, String remaining, String lives, @Nullable String killer) {
             if (killer == null)

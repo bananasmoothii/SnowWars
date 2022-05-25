@@ -124,4 +124,5 @@ messages:
   noRunningGame: '§eSorry, there is currently no running game.'
   statsHeader: '§b§nHere''s how the Snow Wars is running:'
   statsLine: '§9{player}§9 : §l{lives}§9 lives'
+  playerRunningAway: '§c§lHey !§c Don''t leave the map !'
 

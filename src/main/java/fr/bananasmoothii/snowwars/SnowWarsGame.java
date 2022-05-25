@@ -141,6 +141,7 @@ public class SnowWarsGame {
             } else {
                 PlayerData data = new PlayerData(0);
                 data.isGhost = true;
+                data.spawnLocation = nextSpawnLocation();
                 players.put(player, data);
                 SnowWarsPlugin.sendMessage(player, Messages.alreadyStartedSpectator);
                 player.setScoreboard(scoreboard);
