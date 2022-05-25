@@ -20,7 +20,6 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -180,27 +179,6 @@ public class PluginListener implements Listener {
                 && snowWarsGamePlayers.contains(damager)
                 && (victim.getType() == EntityType.SNOWMAN || snowWarsGamePlayers.contains(victim)))
             event.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerTeleportEvent(PlayerTeleportEvent event) {
-        String toName = event.getTo().getWorld().getName();
-        if (! event.getFrom().getWorld().getName().equals(toName)) {
-            if (toName.equals("snowwars") && (mainSnowWarsGame == null || !mainSnowWarsGame.getPlayers().contains(event.getPlayer()))
-                    && ! event.getPlayer().hasPermission("snowwars.teleport")) {
-                event.setCancelled(true);
-                SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseJoin);
-            } else if (!toName.equals("snowwars") && mainSnowWarsGame != null && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
-                    && ! event.getPlayer().hasPermission("snowwars.teleport")) {
-                event.setCancelled(true);
-                SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseQuit);
-            }
-        }
-        if (mainSnowWarsGame != null && mainSnowWarsGame.isStarted() && mainSnowWarsGame.getPlayers().contains(event.getPlayer())
-                && event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE && !event.getPlayer().hasPermission("snowwars.teleport")) {
-            event.setCancelled(true);
-            SnowWarsPlugin.sendMessage(event.getPlayer(), Config.Messages.pleaseUseQuit);
-        }
     }
 
     @EventHandler(priority = EventPriority.LOW)

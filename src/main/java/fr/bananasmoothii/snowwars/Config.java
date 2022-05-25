@@ -368,7 +368,7 @@ public abstract class Config {
             //noinspection ConstantConditions
             source = WorldEdit.getInstance().getSessionManager().findByName(player.getName()).getSelection();
         } catch (IncompleteRegionException | NullPointerException e) {
-            SnowWarsPlugin.sendMessage(player, "§cUnbale to get your current selection");
+            SnowWarsPlugin.sendMessage(player, "§cUnable to get your current selection");
             return false;
         }
         if (! (source instanceof CuboidRegion)) {

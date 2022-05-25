@@ -213,7 +213,7 @@ public class SnowWarsGame {
                 }
                 if (currentMap.getDifferentSpawns() < players.size()) {
                     currentMap = chooseMap(null);
-                    currentMap.asyncRefreshAndCatchExceptions();
+                    currentMap.refresh();
                 }
                 syncStart();
             } catch (UnableToStartException e) {
@@ -431,18 +431,21 @@ public class SnowWarsGame {
             player.setGameMode(GameMode.ADVENTURE);
             player.setAllowFlight(true);
         }
+        int task = 0;
         if (winner != null) {
             final Player finalWinner = winner;
-            final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
+            task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
                     () -> Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
                         "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
                             + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
-            Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
-                Bukkit.getScheduler().cancelTask(task);
-                Objective objective = scoreboard.getObjective("lives-left");
-                if (objective != null) objective.unregister();
-            }, 300);
         }
+        final Player finalWinner1 = winner;
+        final int finalTask = task;
+        Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+            if (finalWinner1 != null) Bukkit.getScheduler().cancelTask(finalTask);
+            Objective objective = scoreboard.getObjective("lives-left");
+            if (objective != null) objective.unregister();
+        }, 300);
         for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
             entry.getKey().teleport(Config.mainSpawn);
             entry.getKey().setAllowFlight(false);
@@ -452,17 +455,18 @@ public class SnowWarsGame {
         started = false;
     }
 
-    public void playerDied(PlayerDeathEvent playerDeathEvent) {
+    public void playerDied(@NotNull PlayerDeathEvent playerDeathEvent) {
         final Player deadPlayer = playerDeathEvent.getEntity();
         final PlayerData playerData = players.get(deadPlayer);
         if (! players.containsKey(deadPlayer)) return;
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
+            CustomLogger.info("(debug) Player " + deadPlayer.getName() + " died, started=" + started);
             if (started) {
                 Location deathLocation = deadPlayer.getLocation();
                 deadPlayer.spigot().respawn();
                 playerData.isGhost = true;
                 deadPlayer.setGameMode(GameMode.SPECTATOR);
-                deadPlayer.teleport(deathLocation);
+                deadPlayer.teleport(deathLocation.add(0, 3, 0));
                 int lives = --players.get(deadPlayer).lives;
                 int remainingPLayers = 0;
                 for (PlayerData data : players.values()) {
@@ -477,7 +481,8 @@ public class SnowWarsGame {
                     if (damager instanceof Player) {
                         killer = ((Player) damager).getDisplayName();
                     } else {
-                        killer = damager.getCustomName() == null ? damager.getName() : damager.getCustomName();
+                        killer = damager.getCustomName();
+                        if (killer == null) killer = damager.getName();
                     }
                 }
                 String message = Messages.getPlayerDiedOrKilledBroadcast(deadPlayer.getDisplayName(),
@@ -510,7 +515,9 @@ public class SnowWarsGame {
 
     public void respawnPlayer(Player player) {
         PlayerData playerData = players.get(player);
-        player.teleport(playerData.spawnLocation);
+        Location spawnLocation = playerData.spawnLocation;
+        player.teleport(spawnLocation);
+        CustomLogger.info("(debug) Player " + player.getName() + " respawned at " + player.getLocation() + " (spawnLocation=" + spawnLocation + ")");
         player.setGameMode(GameMode.ADVENTURE);
         SnowWarsPlugin.sendMessage(player, Messages.youResuscitated);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Config.saturationDurationTicks, Config.saturationLevel - 1, false, false, true));
@@ -523,11 +530,12 @@ public class SnowWarsGame {
             if (block.getType() == Material.AIR) {
                 if (j == Config.spawnSafetyCheck) { // end of checking
                     block.setType(Config.spawnSafetyBlock, false);
+                    CustomLogger.info("(debug) Spawn safety block placed at " + block.getLocation() + " for " + player.getName() + " that has now " + playerData.lives + " lives left.");
                     break;
                 }
             } else break;
         }
-        player.playSound(playerData.spawnLocation, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 0.8f, 1f);
+        player.playSound(spawnLocation, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 0.8f, 1f);
         playerData.justRespawned();
     }
 
