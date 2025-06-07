@@ -525,7 +525,7 @@ public class SnowWarsGame {
         playerData.isGhost = false;
         if (Config.giveAtRespawn) giveStartKit(player);
         asyncFilterInventory(player.getInventory());
-        player.setLastDamageCause(null);
+        //player.setLastDamageCause(null);
         for (int j = 1; j <= Config.spawnSafetyCheck; j++) {
             Block block = player.getWorld().getBlockAt(player.getLocation().subtract(0, j, 0));
             if (block.getType() == Material.AIR) {

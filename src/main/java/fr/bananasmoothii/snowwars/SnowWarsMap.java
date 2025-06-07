@@ -34,14 +34,16 @@ public class SnowWarsMap {
     @SuppressWarnings({"NullableProblems"})
     public SnowWarsMap(String name, Location sourceSpawn, Location playSpawn, @NotNull CuboidRegion sourceRegion, Collection<Location> spawnLocations, @Nullable Location voteLocation) {
         this.name = name;
-        if (sourceSpawn != null && sourceSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World");
+        if (sourceSpawn != null && sourceSpawn.getWorld() == null)
+            throw new NullPointerException("please give Locations with a set World");
         this.sourceSpawn = sourceSpawn;
-        if (playSpawn != null && playSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World");
+        if (playSpawn != null && playSpawn.getWorld() == null)
+            throw new NullPointerException("please give Locations with a set World");
         this.playSpawn = playSpawn;
         this.sourceRegion = Objects.requireNonNull(sourceRegion);
         this.spawnLocations = spawnLocations;
         if (playSpawn != null)
-            this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn,playSpawn);
+            this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn, playSpawn);
         this.voteLocation = voteLocation;
     }
 
@@ -105,7 +107,8 @@ public class SnowWarsMap {
     }
 
     public void setSourceSpawn(Location sourceSpawn) {
-        if (sourceSpawn == null || sourceSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World and don't set to null");
+        if (sourceSpawn == null || sourceSpawn.getWorld() == null)
+            throw new NullPointerException("please give Locations with a set World and don't set to null");
         this.sourceSpawn = Objects.requireNonNull(sourceSpawn);
     }
 
@@ -114,7 +117,8 @@ public class SnowWarsMap {
     }
 
     public void setPlaySpawn(Location playSpawn) {
-        if (playSpawn == null || playSpawn.getWorld() == null) throw new NullPointerException("please give Locations with a set World and don't set to null");
+        if (playSpawn == null || playSpawn.getWorld() == null)
+            throw new NullPointerException("please give Locations with a set World and don't set to null");
         this.playSpawn = Objects.requireNonNull(playSpawn);
         this.playRegion = calculateRegionAtNewLocation(sourceRegion, sourceSpawn, playSpawn);
     }
@@ -152,8 +156,8 @@ public class SnowWarsMap {
     @SuppressWarnings("TypeMayBeWeakened")
     public static @NotNull CuboidRegion calculateRegionAtNewLocation(CuboidRegion oldRegion, Location oldSourcePoint, Location newSourcePoint) {
         return new CuboidRegion(BukkitAdapter.adapt(newSourcePoint.getWorld()),
-                BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMinimumPoint().getBlockX() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMinimumPoint().getBlockY() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMinimumPoint().getBlockZ() - oldSourcePoint.getBlockZ()),
-                BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMaximumPoint().getBlockX() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMaximumPoint().getBlockY() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMaximumPoint().getBlockZ() - oldSourcePoint.getBlockZ())
+                BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMinimumPoint().x() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMinimumPoint().y() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMinimumPoint().z() - oldSourcePoint.getBlockZ()),
+                BlockVector3.at(newSourcePoint.getBlockX() + oldRegion.getMaximumPoint().x() - oldSourcePoint.getBlockX(), newSourcePoint.getBlockY() + oldRegion.getMaximumPoint().y() - oldSourcePoint.getBlockY(), newSourcePoint.getBlockZ() + oldRegion.getMaximumPoint().z() - oldSourcePoint.getBlockZ())
         );
     }
 

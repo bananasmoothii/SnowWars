@@ -21,7 +21,7 @@ public abstract class Util {
 
     @Contract("_, _ -> new")
     public static @NotNull Location blockVector3ToLocation(@NotNull BlockVector3 blockVector3, World world) {
-        return new Location(world, blockVector3.getX(), blockVector3.getY(), blockVector3.getZ());
+        return new Location(world, blockVector3.x(), blockVector3.y(), blockVector3.z());
     }
 
     @Contract("_ -> new")

@@ -195,7 +195,7 @@ public class PluginListener implements Listener {
         if (damager instanceof Player
                 && ! mainSnowWarsGame.isStarted()
                 && snowWarsGamePlayers.contains(damager)
-                && (victim.getType() == EntityType.SNOWMAN || snowWarsGamePlayers.contains(victim)))
+                && (victim.getType() == EntityType.SNOW_GOLEM || snowWarsGamePlayers.contains(victim)))
             event.setCancelled(true);
     }
 

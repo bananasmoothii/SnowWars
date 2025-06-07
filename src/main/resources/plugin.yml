@@ -1,5 +1,5 @@
 name: SnowWars
-version: ${project.version}
+version: ${version}
 main: fr.bananasmoothii.snowwars.SnowWarsPlugin
 api-version: 1.16
 authors: [ Bananasmoothii ]
