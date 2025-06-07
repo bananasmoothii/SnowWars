@@ -6,8 +6,10 @@ import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import de.tr7zw.nbtapi.NBTItem;
-import de.tr7zw.nbtapi.NBTList;
+import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.handler.NBTHandlers;
+import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import de.tr7zw.nbtapi.iface.ReadWriteNBTList;
 import fr.bananasmoothii.snowwars.Config.Messages;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -58,7 +60,9 @@ public class SnowWarsGame {
         private long lastRespawnTime;
 
         public Snowballs snowballs = new Snowballs();
-        /** Height at which the player started falling */
+        /**
+         * Height at which the player started falling
+         */
         public double fallingFrom;
         public boolean isFalling;
 
@@ -134,8 +138,8 @@ public class SnowWarsGame {
 
     public void addPlayer(Player player) {
         boolean setSpectator = false;
-        if (! players.containsKey(player)) {
-            if (! started) {
+        if (!players.containsKey(player)) {
+            if (!started) {
                 players.put(player, new PlayerData(startLives));
                 SnowWarsPlugin.sendMessage(player, Messages.join);
             } else {
@@ -148,9 +152,8 @@ public class SnowWarsGame {
                 setSpectator = true;
                 updateScoreBoard();
             }
-        }
-        else {
-            if (! started)
+        } else {
+            if (!started)
                 SnowWarsPlugin.sendMessage(player, Messages.alreadyJoined);
             else {
                 SnowWarsPlugin.sendMessage(player, Messages.alreadyStarted);
@@ -175,7 +178,7 @@ public class SnowWarsGame {
     }
 
     public void addPlayer(@NotNull Iterable<? extends Player> playerList) {
-        for (Player player: playerList) {
+        for (Player player : playerList) {
             addPlayer(player);
         }
     }
@@ -270,7 +273,8 @@ public class SnowWarsGame {
     }
 
     private @NotNull SnowWarsMap chooseMap(@Nullable String mapName) throws UnableToStartException {
-        if (Config.maps.isEmpty()) throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
+        if (Config.maps.isEmpty())
+            throw new UnableToStartException("There are no defined maps, please run §n/snowwars addmap");
         ArrayList<SnowWarsMap> possibleMaps = new ArrayList<>();
         @Nullable SnowWarsMap chosenMap = null;
         if (mapName != null) {
@@ -304,8 +308,7 @@ public class SnowWarsGame {
 
             if (votedMap != null && votedMap.getDifferentSpawns() >= totalPlayers) {
                 chosenMap = votedMap;
-            }
-            else {
+            } else {
                 if (votedMap != null && votedMap.getDifferentSpawns() < totalPlayers) {
                     for (Player player : players.keySet()) {
                         SnowWarsPlugin.sendMessage(player, Messages.getNotEnoughSpawnPoints(votedMap.getName(), String.valueOf(totalPlayers)));
@@ -317,14 +320,13 @@ public class SnowWarsGame {
                 for (SnowWarsMap map : Config.maps) {
                     if (map.getDifferentSpawns() >= totalPlayers) {
                         possibleMaps.add(map);
-                    }
-                    else break; // the others will be below totalPlayers
+                    } else break; // the others will be below totalPlayers
                 }
                 if (possibleMaps.isEmpty()) {
                     if (Config.maps.isEmpty()) {
                         throw new UnableToStartException("Please define first at least one map with §n/snowwars addspawn");
                     }
-                    chosenMap = Config.maps.get(Config.maps.size() - 1);
+                    chosenMap = Config.maps.getLast();
                     if (chosenMap.getDifferentSpawns() == 0) {
                         throw new UnableToStartException("Found no usable map with more than 0 spawns, please run §n/snowwars addspawn§c to add spawn locations");
                     }
@@ -338,17 +340,19 @@ public class SnowWarsGame {
 
     /**
      * Replaces all structure voids to ice
+     *
      * @throws NullPointerException if currentMap is null (the game didn't start)
      */
     public void iceEvent() {
         if (currentMap == null) throw new NullPointerException("There is no current map");
-        if (currentMap.getPlaySpawn() == null || currentMap.getPlaySpawn().getWorld() == null) throw new NullPointerException("This is not a valid map");
+        if (currentMap.getPlaySpawn() == null || currentMap.getPlaySpawn().getWorld() == null)
+            throw new NullPointerException("This is not a valid map");
         final long startTime = System.currentTimeMillis();
         final BossBar bossBar = Bukkit.getServer().createBossBar(
                 Messages.getBossBar(String.valueOf(Config.iceEventKeep)),
                 BarColor.BLUE, BarStyle.SOLID);
         bossBar.setProgress(1.0);
-        for (Player player: getPlayers()) {
+        for (Player player : getPlayers()) {
             player.playSound(player.getLocation(), Sound.ENTITY_WITCH_CELEBRATE, 0.4f, 1.5f);
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.85f, 0.5f);
             bossBar.addPlayer(player);
@@ -369,7 +373,7 @@ public class SnowWarsGame {
 
                 Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
                     countDownTask.cancel();
-                    for (Player player: getPlayers()) {
+                    for (Player player : getPlayers()) {
                         player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.1f, 0.5f);
                     }
                     bossBar.removeAll();
@@ -403,14 +407,14 @@ public class SnowWarsGame {
 
     @SuppressWarnings("TypeMayBeWeakened")
     private static void giveStartKit(Player player) {
-        for (String string: Config.startSet) {
+        for (String string : Config.startSet) {
             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
                     "minecraft:give " + player.getName() + ' ' + string);
         }
     }
 
     public void stop() {
-        if (! started) throw new IllegalStateException("you cannot stop a game that hasn't started");
+        if (!started) throw new IllegalStateException("you cannot stop a game that hasn't started");
         if (iceEventTask != null) {
             iceEventTask.cancel();
             iceEventTask = null;
@@ -420,14 +424,14 @@ public class SnowWarsGame {
         @SuppressWarnings("TypeMayBeWeakened")
         ArrayList<Player> sortedPlayers = new ArrayList<>(players.keySet());
         sortedPlayers.sort(Comparator.comparingInt((Player p) -> players.get(p).lives));
-        for (Player player: sortedPlayers) {
+        for (Player player : sortedPlayers) {
             if (!players.get(player).isPermanentDeath()) {
                 winner = player;
                 break;
             }
         }
         String winnerName = winner == null ? Messages.defaultWinner : winner.getDisplayName();
-        for (Player player: players.keySet()) {
+        for (Player player : players.keySet()) {
             player.sendTitle(Messages.getPlayerWon(winnerName), null, 20, 120, 40);
             player.setGameMode(GameMode.ADVENTURE);
             player.setAllowFlight(true);
@@ -437,8 +441,8 @@ public class SnowWarsGame {
             final Player finalWinner = winner;
             task = Bukkit.getScheduler().scheduleSyncRepeatingTask(SnowWarsPlugin.inst(),
                     () -> Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),
-                        "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
-                            + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
+                            "minecraft:execute at " + finalWinner.getName() + " run summon firework_rocket ~ ~3 ~"
+                                    + " {LifeTime:20,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Type:0,Trail:1,Colors:[I;4312372,14602026],FadeColors:[I;11743532,15435844]}],Flight:1}}}}"), 5, 10);
         }
         final Player finalWinner1 = winner;
         final int finalTask = task;
@@ -447,7 +451,7 @@ public class SnowWarsGame {
             Objective objective = scoreboard.getObjective("lives-left");
             if (objective != null) objective.unregister();
         }, 300);
-        for (Map.Entry<Player, PlayerData> entry: players.entrySet()) {
+        for (Map.Entry<Player, PlayerData> entry : players.entrySet()) {
             entry.getKey().teleport(Config.mainSpawn);
             entry.getKey().setAllowFlight(false);
             entry.getValue().lives = Config.lives;
@@ -459,7 +463,7 @@ public class SnowWarsGame {
     public void playerDied(@NotNull PlayerDeathEvent playerDeathEvent) {
         final Player deadPlayer = playerDeathEvent.getEntity();
         final PlayerData playerData = players.get(deadPlayer);
-        if (! players.containsKey(deadPlayer)) return;
+        if (!players.containsKey(deadPlayer)) return;
         Bukkit.getScheduler().runTaskLater(SnowWarsPlugin.inst(), () -> {
             CustomLogger.info("(debug) Player " + deadPlayer.getName() + " died, started=" + started);
             if (started) {
@@ -555,6 +559,7 @@ public class SnowWarsGame {
 
     private int i;
     private List<Location> shuffledSpawns;
+
     private Location nextSpawnLocation() {
         Location location = shuffledSpawns.get(i);
         if (i == shuffledSpawns.size() - 1) i = 0;
@@ -569,13 +574,13 @@ public class SnowWarsGame {
         Server server = Bukkit.getServer();
         oldRecipes = new ArrayList<>(Config.itemsAbleToBreakSnow.size() + 1);
         oldRecipes.addAll(server.getRecipesFor(new ItemStack(Material.SNOW_BLOCK)));
-        for (Material material: Config.itemsAbleToBreakSnow) {
+        for (Material material : Config.itemsAbleToBreakSnow) {
             oldRecipes.addAll(server.getRecipesFor(
                     new ItemStack(material)
             ));
         }
         newRecipes = new ArrayList<>(Config.itemsAbleToBreakSnow.size() + 1);
-        for (Recipe recipe: oldRecipes) {
+        for (Recipe recipe : oldRecipes) {
             Recipe newRecipe;
             ItemStack result = filterItemStack(recipe.getResult());
             if (result.getType() == Material.SNOW_BLOCK)
@@ -592,15 +597,15 @@ public class SnowWarsGame {
                 newRecipe = new ShapedRecipe(key(((Keyed) recipe).getKey().getKey()), result);
                 ShapedRecipe copy = (ShapedRecipe) newRecipe;
                 copy.shape(oldCopy.getShape());
-                for (Map.Entry<Character, ItemStack> entry: oldCopy.getIngredientMap().entrySet()) {
+                for (Map.Entry<Character, ItemStack> entry : oldCopy.getIngredientMap().entrySet()) {
                     if (entry.getValue() != null)
                         copy.setIngredient(entry.getKey(), entry.getValue().getType());
                 }
                 copy.setGroup(oldCopy.getGroup());
-            } else if (recipe instanceof SmithingRecipe) {
+            }/* else if (recipe instanceof SmithingRecipe) {
                 newRecipe = new SmithingRecipe(key(((Keyed) recipe).getKey().getKey()), result,
                         ((SmithingRecipe) recipe).getBase(), ((SmithingRecipe) recipe).getAddition());
-            } else continue;
+            }*/ else continue;
 
             newRecipes.add(newRecipe);
         }
@@ -618,10 +623,10 @@ public class SnowWarsGame {
 
     private static void setOldRecipes() {
         Server server = Bukkit.getServer();
-        for (Recipe recipe: newRecipes) {
+        for (Recipe recipe : newRecipes) {
             server.removeRecipe(((Keyed) recipe).getKey());
         }
-        for (Recipe recipe: oldRecipes) {
+        for (Recipe recipe : oldRecipes) {
             server.addRecipe(recipe);
         }
     }
@@ -638,25 +643,50 @@ public class SnowWarsGame {
     public static void filterInventory(@NotNull Inventory inventory) {
         if (inventory.isEmpty()) return;
         int i = 0;
-        for (ItemStack itemStack: inventory.getContents()) {
+        for (ItemStack itemStack : inventory.getContents()) {
             if (itemStack != null) inventory.setItem(i, filterItemStack(itemStack));
             i++;
         }
     }
 
     public static ItemStack filterItemStack(@NotNull ItemStack itemStack) {
-        if (itemStack.getType() != Material.SNOW_BLOCK && ! Config.itemsAbleToBreakSnow.contains(itemStack.getType()))
+        if (itemStack.getType() != Material.SNOW_BLOCK && !Config.itemsAbleToBreakSnow.contains(itemStack.getType()))
             return itemStack;
-        NBTItem nbtItem = new NBTItem(itemStack);
-        if (itemStack.getType() == Material.SNOW_BLOCK) {
-            nbtItem.getStringList("CanPlaceOn").addAll(Config.canPlaceSnowOnStrings);
-        } else {
-            NBTList<String> canBreak = nbtItem.getStringList("CanDestroy");
-            canBreak.add("minecraft:snow");
-            canBreak.add("minecraft:snow_block");
-            canBreak.add("minecraft:powder_snow");
-        }
-        return nbtItem.getItem();
+        boolean above1201 = Bukkit.getBukkitVersion().compareTo("1.20.1") >= 0;
+        NBT.modifyComponents(itemStack, nbtItem -> {
+            if (itemStack.getType() == Material.SNOW_BLOCK) {
+                if (above1201) {
+                    ReadWriteNBT predicates = NBT.parseNBT("{predicates:[{blocks:[]}]}");
+                    predicates.getCompoundList("predicates")
+                            .get(0)
+                            .getStringList("blocks")
+                            .addAll(Config.canPlaceSnowOnStrings);
+                    nbtItem.set("minecraft:can_place_on", predicates, NBTHandlers.STORE_READWRITE_TAG);
+                } else {
+                    // NOT TESTED
+                    ReadWriteNBTList<String> canPlaceOn = nbtItem.getStringList("CanPlaceOn");
+                    canPlaceOn.addAll(Config.canPlaceSnowOnStrings);
+                }
+            } else {
+                if (above1201) {
+                    ReadWriteNBT predicates = NBT.parseNBT("{predicates:[{blocks:[]}]}");
+                    ReadWriteNBTList<String> blocks = predicates.getCompoundList("predicates")
+                            .get(0)
+                            .getStringList("blocks");
+                    blocks.add("minecraft:snow");
+                    blocks.add("minecraft:snow_block");
+                    blocks.add("minecraft:powder_snow");
+                    nbtItem.set("minecraft:can_break", predicates, NBTHandlers.STORE_READWRITE_TAG);
+                } else {
+                    // NOT TESTED
+                    ReadWriteNBTList<String> canBreak = nbtItem.getStringList("CanDestroy");
+                    canBreak.add("minecraft:snow");
+                    canBreak.add("minecraft:snow_block");
+                    canBreak.add("minecraft:powder_snow");
+                }
+            }
+        });
+        return itemStack;
     }
 
     public static class UnableToStartException extends Exception {

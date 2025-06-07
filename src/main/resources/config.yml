@@ -42,7 +42,7 @@ snow-block-break-limit: 150
 # set given at each players. This uses commands, so for example "sand" will become "/minecraft:give <player> sand".
 # This allows to put nbt tags and amounts to each item.
 start-set:
-  - 'stone_shovel{Enchantments:[{id:"unbreaking",lvl:4s}]}'
+  - 'stone_shovel[enchantments={levels:{"minecraft:unbreaking":5}}]'
   - 'snowball 16'
 # whether to give these items only at the beginning or at each respawn
 give-set-at-respawn: true
