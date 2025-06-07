@@ -6,7 +6,7 @@
 
     <groupId>fr.bananasmoothii</groupId>
     <artifactId>SnowWars</artifactId>
-    <version>0.15-fawe</version>
+    <version>0.17-fawe</version>
     <packaging>jar</packaging>
 
     <name>SnowWars</name>
@@ -46,7 +46,8 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <outputFile>${project.build.directory}/${project.name}-${project.version}-bukkit.jar</outputFile>
+                            <outputFile>${project.build.directory}/${project.name}-${project.version}-bukkit.jar
+                            </outputFile>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -104,7 +105,7 @@
     <repositories>
         <repository>
             <id>papermc</id>
-            <url>https://papermc.io/repo/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>sonatype</id>
@@ -116,16 +117,32 @@
         </repository>
         <repository>
             <id>codemc-repo</id>
-            <url>https://repo.codemc.org/repository/maven-public/</url>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
             <layout>default</layout>
         </repository>
+        <repository>
+            <id>enginehub</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.intellectualsites.bom</groupId>
+                <artifactId>bom-newest</artifactId> <!--  Ref: https://github.com/IntellectualSites/bom -->
+                <version>1.52</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.18.1-R0.1-SNAPSHOT</version>
+            <version>1.21.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -163,7 +180,7 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>2.9.0</version>
+            <version>2.15.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
