@@ -653,9 +653,15 @@ public class SnowWarsGame {
         if (itemStack.getType() != Material.SNOW_BLOCK && !Config.itemsAbleToBreakSnow.contains(itemStack.getType()))
             return itemStack;
         boolean above1201 = Bukkit.getBukkitVersion().compareTo("1.20.1") >= 0;
+        boolean above1205 = Bukkit.getBukkitVersion().compareTo("1.20.5") >= 0;
         NBT.modifyComponents(itemStack, nbtItem -> {
             if (itemStack.getType() == Material.SNOW_BLOCK) {
-                if (above1201) {
+                if (above1205) {
+                    ReadWriteNBT canPlaceOn = NBT.parseNBT("{blocks: []}");
+                    ReadWriteNBTList<String> blocks = canPlaceOn.getStringList("blocks");
+                    blocks.addAll(Config.canPlaceSnowOnStrings);
+                    nbtItem.set("minecraft:can_place_on", canPlaceOn, NBTHandlers.STORE_READWRITE_TAG);
+                } else if (above1201) {
                     ReadWriteNBT predicates = NBT.parseNBT("{predicates:[{blocks:[]}]}");
                     predicates.getCompoundList("predicates")
                             .get(0)
@@ -668,7 +674,17 @@ public class SnowWarsGame {
                     canPlaceOn.addAll(Config.canPlaceSnowOnStrings);
                 }
             } else {
-                if (above1201) {
+                // example:
+                // {id: "minecraft:stone_shovel", count: 1, components: {"minecraft:can_break": {blocks:
+                // ["minecraft:snow", "minecraft:snow_block"]}}}
+                if (above1205) {
+                    ReadWriteNBT canBreak = NBT.parseNBT("{blocks: []}");
+                    ReadWriteNBTList<String> blocks = canBreak.getStringList("blocks");
+                    blocks.add("minecraft:snow");
+                    blocks.add("minecraft:snow_block");
+                    blocks.add("minecraft:powder_snow");
+                    nbtItem.set("minecraft:can_break", canBreak, NBTHandlers.STORE_READWRITE_TAG);
+                } else if (above1201) {
                     ReadWriteNBT predicates = NBT.parseNBT("{predicates:[{blocks:[]}]}");
                     ReadWriteNBTList<String> blocks = predicates.getCompoundList("predicates")
                             .get(0)

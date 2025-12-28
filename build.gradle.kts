@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "fr.bananasmoothii"
-version = "0.17-fawe"
+version = "0.18-fawe"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
 
-    compileOnly("de.tr7zw:item-nbt-api-plugin:2.15.0")
+    compileOnly("de.tr7zw:item-nbt-api-plugin:2.15.5")
 }
 
 tasks {
@@ -42,7 +42,7 @@ tasks {
         // Configure the Minecraft version for our task.
         // This is the only required configuration besides applying the plugin.
         // Your plugin's jar (or shadowJar if present) will be used automatically.
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.8")
     }
     processResources {
         // This task is used to process the resources of your plugin.
